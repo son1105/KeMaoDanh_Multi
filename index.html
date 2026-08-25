@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>KẺ MẠO DANH ONLINE — Hồ Sơ Mật</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Oswald:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#151311;
+    --charcoal:#1c1a17;
+    --charcoal-2:#242018;
+    --paper:#ece3cc;
+    --paper-dim:#d9cca6;
+    --red:#a5271f;
+    --red-bright:#c9342a;
+    --amber:#c9992f;
+    --amber-dim:#8a6c2a;
+    --ghost:#8fb3c7;
+    --chaos:#b48ee0;
+    --detective:#7fc9a0;
+    --hunter:#d9824f;
+    --fool:#d97fb0;
+    --line: rgba(236,227,204,0.14);
+    --shadow: 0 20px 50px rgba(0,0,0,0.55);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100vh;
+    min-height:100dvh;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(201,153,47,0.09), transparent 60%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px),
+      var(--charcoal);
+    color:var(--paper);
+    font-family:'IBM Plex Mono', monospace;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:24px 18px;
+    overflow-x:hidden;
+  }
+  .app{ width:100%; max-width:460px; }
+  h1,h2,h3{ font-family:'Oswald', sans-serif; margin:0; }
+
+  .masthead{ text-align:center; margin-bottom:22px; }
+  .masthead .kicker{ font-size:11px; letter-spacing:0.35em; color:var(--amber-dim); text-transform:uppercase; }
+  .masthead h1{ font-size:34px; font-weight:700; text-transform:uppercase; color:var(--paper); margin-top:6px; }
+  .masthead h1 span{ color:var(--red-bright); }
+  .masthead .rule{ height:1px; background:linear-gradient(90deg, transparent, var(--amber-dim), transparent); margin:14px auto 0; width:70%; }
+  .masthead .online-badge{ display:inline-block; margin-top:8px; font-size:10px; letter-spacing:0.2em; color:var(--ghost); border:1px solid var(--ghost); padding:3px 8px; border-radius:10px; text-transform:uppercase; }
+
+  .card{
+    background:var(--charcoal-2);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:22px 20px;
+    box-shadow:var(--shadow);
+  }
+
+  .field-label{ font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--amber); margin-bottom:8px; display:block; }
+
+  .btn{
+    display:block; width:100%; padding:14px 16px;
+    background:var(--red); color:var(--paper);
+    border:1px solid rgba(0,0,0,0.3); border-radius:3px;
+    font-family:'Oswald', sans-serif; font-size:15px; letter-spacing:0.06em; text-transform:uppercase;
+    text-align:center; cursor:pointer;
+    box-shadow: 0 4px 0 #6e1712, 0 8px 16px rgba(0,0,0,0.4);
+  }
+  .btn:active{ transform:translateY(2px); box-shadow:0 1px 0 #6e1712; }
+  .btn.secondary{ background:transparent; color:var(--paper-dim); border:1px solid var(--line); box-shadow:none; }
+  .btn.small{ padding:11px; font-size:13px; }
+  .btn + .btn{ margin-top:10px; }
+  .btn:disabled{ opacity:0.4; cursor:default; box-shadow:none; }
+
+  .text-input{
+    width:100%; background:var(--charcoal); border:1px solid var(--line); color:var(--paper);
+    font-family:'IBM Plex Mono', monospace; font-size:15px; padding:12px 14px; border-radius:3px; text-transform:none;
+  }
+  .text-input:focus{ outline:1px solid var(--amber); border-color:var(--amber); }
+  .text-input.code-input{ text-transform:uppercase; letter-spacing:0.25em; text-align:center; font-size:20px; }
+
+  .hint{ font-size:12.5px; color:var(--paper-dim); line-height:1.6; margin-top:14px; }
+  .hint.tight{ margin-top:0; }
+
+  .room-code-box{ text-align:center; padding:16px; border:2px dashed var(--amber-dim); border-radius:4px; margin-bottom:16px; }
+  .room-code-box .rc-label{ font-size:11px; letter-spacing:0.2em; color:var(--amber-dim); text-transform:uppercase; }
+  .room-code-box .rc-code{ font-family:'Oswald',sans-serif; font-size:38px; letter-spacing:0.15em; color:var(--amber); margin-top:4px; }
+
+  .player-list{ display:flex; flex-direction:column; gap:6px; margin:10px 0 16px; }
+  .player-row{ display:flex; align-items:center; justify-content:space-between; padding:9px 12px; border:1px solid var(--line); border-radius:3px; background:var(--charcoal); font-size:13.5px; }
+  .player-row .tag{ font-size:10px; color:var(--amber); letter-spacing:0.1em; text-transform:uppercase; }
+
+  .stepper-row{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+  .stepper{ display:flex; align-items:center; justify-content:space-between; background:var(--charcoal); border:1px solid var(--line); border-radius:3px; padding:7px 8px; }
+  .stepper button{ width:26px; height:26px; border-radius:3px; border:1px solid var(--amber-dim); background:transparent; color:var(--amber); font-size:14px; font-family:'IBM Plex Mono',monospace; cursor:pointer; }
+  .stepper .value{ font-family:'Oswald', sans-serif; font-size:17px; color:var(--paper); min-width:18px; text-align:center; }
+  .stepper-row .field-label{ font-size:10.5px; letter-spacing:0.06em; margin-bottom:6px; }
+
+  .theme-select{
+    width:100%; padding:11px 36px 11px 12px; background:var(--charcoal)
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'><path d='M1 1l6 6 6-6' fill='none' stroke='%23c9992f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>")
+      no-repeat right 12px center;
+    border:1px solid var(--line); border-radius:3px; color:var(--paper); font-family:'Oswald',sans-serif; font-size:13px;
+    appearance:none; -webkit-appearance:none;
+  }
+
+  .toggle-row{ display:flex; align-items:center; gap:12px; margin-top:12px; padding:9px 11px; background:var(--charcoal); border:1px solid var(--line); border-radius:3px; }
+  .toggle-title{ font-family:'Oswald',sans-serif; font-size:13px; color:var(--paper); }
+  .toggle-caption{ font-size:10.5px; color:var(--paper-dim); margin-top:2px; }
+  .toggle-switch{ flex-shrink:0; width:40px; height:22px; border-radius:20px; border:1px solid var(--line); background:var(--charcoal-2); position:relative; cursor:pointer; padding:0; }
+  .toggle-switch .knob{ position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--paper-dim); transition:transform .15s ease; }
+  .toggle-switch[aria-pressed="true"]{ background:var(--red); border-color:transparent; }
+  .toggle-switch[aria-pressed="true"] .knob{ transform:translateX(18px); background:var(--paper); }
+
+  /* Envelope reveal (tương tự bản 1 máy) */
+  .envelope-trigger{ width:100%; padding:30px 18px; background:var(--charcoal); border:2px dashed var(--amber-dim); border-radius:6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .envelope-trigger-icon{ font-size:40px; animation: floaty 2.2s ease-in-out infinite; }
+  @keyframes floaty{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
+  .envelope-trigger-label{ font-family:'Oswald',sans-serif; font-size:12.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--amber); }
+
+  .reveal-modal-overlay{ position:fixed; inset:0; background:rgba(8,7,6,0.84); display:flex; align-items:center; justify-content:center; z-index:60; opacity:0; pointer-events:none; transition:opacity .2s ease; padding:20px; }
+  .reveal-modal-overlay.active{ opacity:1; pointer-events:auto; }
+  .reveal-panel{ position:relative; width:min(360px,100%); background:var(--charcoal-2); border:1px solid var(--line); border-radius:8px; padding:22px 20px; box-shadow:var(--shadow); }
+  .reveal-panel .rp-close{ position:absolute; top:10px; right:10px; width:28px; height:28px; border-radius:50%; background:var(--charcoal); border:1px solid var(--line); color:var(--paper-dim); cursor:pointer; }
+
+  .stamp-zone{ height:230px; border:2px dashed var(--amber-dim); border-radius:4px; position:relative; overflow:hidden;
+    background: repeating-linear-gradient(135deg, rgba(201,153,47,0.03) 0px, rgba(201,153,47,0.03) 10px, transparent 10px, transparent 20px); }
+  .envelope-flap{ position:absolute; top:0; left:0; right:0; height:80px; background:linear-gradient(180deg, rgba(201,153,47,0.12), transparent); clip-path:polygon(0 0,100% 0,50% 66%); opacity:0.5; }
+  .card-pullout{ position:absolute; inset:0; z-index:2; transform:translateY(100%); }
+  .dossier{ width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; background:var(--charcoal-2); border-top:1px solid var(--line); }
+  .role-eyebrow{ font-size:11px; letter-spacing:0.3em; text-transform:uppercase; color:var(--amber); }
+  .role-loc{ font-family:'Oswald',sans-serif; font-size:27px; color:var(--paper); margin:9px 0 4px; text-align:center; }
+  .role-title{ font-family:'Special Elite',monospace; font-size:14.5px; color:var(--paper-dim); text-align:center; line-height:1.5; }
+  .dossier.spy .role-eyebrow{ color:var(--red-bright); }
+  .dossier.spy .role-loc{ color:var(--red-bright); }
+  .dossier.saboteur .role-eyebrow, .dossier.saboteur .role-loc{ color:var(--chaos); }
+  .dossier.detective .role-eyebrow, .dossier.detective .role-loc{ color:var(--detective); }
+  .dossier.hunter .role-eyebrow, .dossier.hunter .role-loc{ color:var(--hunter); }
+  .dossier.foolvillager .role-eyebrow, .dossier.foolvillager .role-loc{ color:var(--fool); }
+  .pull-hint{ position:absolute; left:50%; bottom:16px; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:6px; z-index:3; cursor:grab; touch-action:none; user-select:none; }
+  .pull-hint.hidden{ opacity:0; pointer-events:none; }
+  .pull-grip{ width:40px; height:5px; border-radius:3px; background:var(--amber-dim); }
+  .pull-label{ font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--amber); }
+
+  .ability-box{ margin-top:14px; }
+  .target-list{ display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+  .target-item{ display:flex; align-items:center; gap:10px; padding:9px 12px; border:1px solid var(--line); border-radius:3px; background:var(--charcoal); cursor:pointer; font-size:13.5px; color:var(--paper-dim); }
+  .target-item.checked{ border-color:var(--amber); color:var(--paper); }
+  .ability-result{ margin-top:12px; padding:12px; border-radius:4px; text-align:center; }
+  .ability-result.ok{ border:1px solid var(--detective); background:rgba(127,201,160,0.1); }
+  .ability-result.no{ border:1px solid var(--red-bright); background:rgba(197,39,31,0.1); }
+  .ability-result .art{ font-family:'Oswald',sans-serif; font-size:16px; margin-bottom:3px; }
+  .ability-result.ok .art{ color:var(--detective); }
+  .ability-result.no .art{ color:var(--red-bright); }
+  .ability-result .ars{ font-size:11.5px; color:var(--paper-dim); }
+
+  .timer-face{ font-family:'Oswald',sans-serif; font-size:58px; text-align:center; color:var(--paper); margin:6px 0 2px; }
+  .timer-face.warn{ color:var(--red-bright); animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.06);} }
+  .timer-sub{ text-align:center; font-size:12px; color:var(--paper-dim); }
+  .starter-box{ text-align:center; border:1px solid var(--amber-dim); border-radius:4px; padding:12px; margin-bottom:16px; background:rgba(201,153,47,0.05); }
+  .starter-box .sl{ font-size:10.5px; letter-spacing:0.2em; text-transform:uppercase; color:var(--amber-dim); margin-bottom:4px; }
+  .starter-box .sn{ font-family:'Oswald',sans-serif; font-size:20px; color:var(--amber); }
+
+  .vote-progress{ font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:0.08em; color:var(--amber); text-transform:uppercase; margin-bottom:10px; }
+  .vote-card{ border:1px solid var(--line); border-radius:3px; background:var(--charcoal); margin-bottom:8px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; font-size:14px; }
+  .vote-card.locked{ opacity:0.4; pointer-events:none; }
+  .vote-card.open{ cursor:default; }
+  .vote-card.is-spy{ border-color:var(--red-bright); }
+  .vote-card.is-mrwhite{ border-color:var(--ghost); }
+  .vote-card.is-saboteur{ border-color:var(--chaos); }
+  .vote-card.is-detective{ border-color:var(--detective); }
+  .vote-card.is-hunter{ border-color:var(--hunter); }
+  .vote-card.is-foolvillager{ border-color:var(--fool); }
+  .vote-card .status{ font-size:11.5px; color:var(--paper-dim); text-transform:uppercase; letter-spacing:0.06em; }
+  .vote-card.is-spy .status{ color:var(--red-bright); }
+  .vote-card.is-mrwhite .status{ color:var(--ghost); }
+  .vote-card.is-saboteur .status{ color:var(--chaos); }
+  .vote-card.is-detective .status{ color:var(--detective); }
+  .vote-card.is-hunter .status{ color:var(--hunter); }
+  .vote-card.is-foolvillager .status{ color:var(--fool); }
+
+  .vote-end-banner{ margin:12px 0; padding:14px; border-radius:4px; text-align:center; border:1px solid var(--amber); background:rgba(201,153,47,0.08); }
+  .vote-end-banner.spies-win{ border-color:var(--red-bright); background:rgba(197,39,31,0.1); }
+  .vote-end-banner.saboteur-win{ border-color:var(--chaos); background:rgba(180,142,224,0.1); }
+  .vote-end-banner.hunter-win{ border-color:var(--hunter); background:rgba(217,130,79,0.1); }
+  .vote-end-banner.mrwhite-win{ border-color:var(--ghost); background:rgba(143,179,199,0.1); }
+  .vote-end-banner .bt{ font-family:'Oswald',sans-serif; font-size:15px; text-transform:uppercase; margin-bottom:4px; }
+  .vote-end-banner.spies-win .bt{ color:var(--red-bright); }
+  .vote-end-banner.saboteur-win .bt{ color:var(--chaos); }
+  .vote-end-banner.hunter-win .bt{ color:var(--hunter); }
+  .vote-end-banner.mrwhite-win .bt{ color:var(--ghost); }
+  .vote-end-banner .bs{ font-size:12px; color:var(--paper-dim); }
+
+  .reveal-spin-overlay{ position:fixed; inset:0; background:rgba(8,7,6,0.82); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; z-index:70; opacity:0; pointer-events:none; transition:opacity .2s ease; }
+  .reveal-spin-overlay.active{ opacity:1; pointer-events:auto; }
+  .spin-stage{ width:200px; height:260px; perspective:1000px; }
+  .spin-inner{ position:relative; width:100%; height:100%; transform-style:preserve-3d; transform:rotateY(0deg) scale(0.7); border-radius:12px; }
+  .spin-inner.spinning{ animation: spinRev 1.05s cubic-bezier(.28,1.15,.34,1) forwards; }
+  @keyframes spinRev{ 0%{transform:rotateY(0deg) scale(.65);} 12%{transform:rotateY(90deg) scale(1.04);} 100%{transform:rotateY(900deg) scale(1);} }
+  .spin-face{ position:absolute; inset:0; backface-visibility:hidden; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; border:2px solid var(--amber-dim); background:var(--charcoal-2); box-shadow:0 20px 50px rgba(0,0,0,.6); }
+  .spin-face.back{ transform:rotateY(180deg); }
+  .spin-icon-q{ font-size:50px; animation: qpulse .7s ease-in-out infinite; }
+  @keyframes qpulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.12);} }
+  .spin-icon{ font-size:48px; }
+  .spin-name{ font-family:'Special Elite',monospace; font-size:13px; color:var(--paper-dim); }
+  .spin-role{ font-family:'Oswald',sans-serif; font-size:21px; text-transform:uppercase; }
+  .spin-face.back.is-spy{ border-color:var(--red-bright); } .spin-face.back.is-spy .spin-role{ color:var(--red-bright); }
+  .spin-face.back.is-mrwhite{ border-color:var(--ghost); } .spin-face.back.is-mrwhite .spin-role{ color:var(--ghost); }
+  .spin-face.back.is-saboteur{ border-color:var(--chaos); } .spin-face.back.is-saboteur .spin-role{ color:var(--chaos); }
+  .spin-face.back.is-detective{ border-color:var(--detective); } .spin-face.back.is-detective .spin-role{ color:var(--detective); }
+  .spin-face.back.is-hunter{ border-color:var(--hunter); } .spin-face.back.is-hunter .spin-role{ color:var(--hunter); }
+  .spin-face.back.is-foolvillager{ border-color:var(--fool); } .spin-face.back.is-foolvillager .spin-role{ color:var(--fool); }
+  .spin-taphint{ font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--paper-dim); opacity:0; }
+  .spin-taphint.show{ opacity:0.85; }
+
+  .mrwhite-wait{ text-align:center; padding:16px; border:1px solid var(--ghost); border-radius:4px; background:rgba(143,179,199,0.08); }
+  .mrwhite-wait .mw-t{ font-family:'Oswald',sans-serif; color:var(--ghost); font-size:15px; margin-bottom:4px; }
+
+  .summary-row{ display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .summary-row .who{ color:var(--paper); }
+  .summary-row .what{ color:var(--paper-dim); }
+  .summary-row.is-spy .what{ color:var(--red-bright); }
+  .summary-row.is-mrwhite .what{ color:var(--ghost); }
+  .summary-row.is-saboteur .what{ color:var(--chaos); }
+  .summary-row.is-detective .what{ color:var(--detective); }
+  .summary-row.is-hunter .what{ color:var(--hunter); }
+  .summary-row.is-foolvillager .what{ color:var(--fool); }
+
+  .confirm-overlay{ position:fixed; inset:0; background:rgba(8,7,6,0.82); display:flex; align-items:center; justify-content:center; z-index:80; opacity:0; pointer-events:none; transition:opacity .2s ease; padding:20px; }
+  .confirm-overlay.active{ opacity:1; pointer-events:auto; }
+  .confirm-panel{ width:min(340px,100%); background:var(--charcoal-2); border:1px solid var(--line); border-radius:8px; padding:20px; }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; animation:fadein .25s ease; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  footer{ text-align:center; margin-top:16px; font-size:10px; color:var(--amber-dim); letter-spacing:0.12em; text-transform:uppercase; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="masthead">
+    <div class="kicker">Hồ Sơ Mật · Trò Chơi Suy Luận</div>
+    <h1>KẺ MẠO <span>DANH</span></h1>
+    <div class="online-badge">🌐 Chế Độ Nhiều Máy</div>
+    <div class="rule"></div>
+  </div>
+
+  <!-- LANDING -->
+  <div class="screen active" id="screen-landing">
+    <div class="card">
+      <span class="field-label">Tên của bạn</span>
+      <input class="text-input" id="my-name-input" placeholder="Nhập tên bạn muốn hiện...">
+
+      <div style="margin-top:18px;">
+        <button class="btn" id="create-room-btn">➕ Tạo Phòng Mới</button>
+      </div>
+
+      <div class="hint" style="margin-top:18px;">Hoặc tham gia phòng đã có:</div>
+      <input class="text-input code-input" id="join-code-input" placeholder="MÃ PHÒNG" style="margin-top:8px;">
+      <button class="btn secondary" id="join-room-btn" style="margin-top:10px;">Tham Gia Phòng</button>
+
+      <div class="hint" id="landing-status"></div>
+    </div>
+  </div>
+
+  <!-- LOBBY -->
+  <div class="screen" id="screen-lobby">
+    <div class="card">
+      <div class="room-code-box">
+        <div class="rc-label">Mã Phòng — Chia Sẻ Cho Mọi Người</div>
+        <div class="rc-code" id="lobby-room-code">------</div>
+      </div>
+
+      <span class="field-label">Người chơi đã tham gia (<span id="lobby-count">0</span>)</span>
+      <div class="player-list" id="lobby-player-list"></div>
+
+      <div id="lobby-host-controls" style="display:none;">
+        <span class="field-label">Chủ đề từ khóa</span>
+        <select class="theme-select" id="lobby-theme-select" style="margin-bottom:14px;"></select>
+
+        <div class="stepper-row">
+          <div><span class="field-label">Kẻ mạo danh</span>
+            <div class="stepper"><button id="lb-minus-spies">−</button><span class="value" id="lb-spies-count">1</span><button id="lb-plus-spies">+</button></div>
+          </div>
+          <div><span class="field-label">Mr. White</span>
+            <div class="stepper"><button id="lb-minus-whites">−</button><span class="value" id="lb-whites-count">0</span><button id="lb-plus-whites">+</button></div>
+          </div>
+          <div><span class="field-label">Kẻ phá game</span>
+            <div class="stepper"><button id="lb-minus-sab">−</button><span class="value" id="lb-sab-count">0</span><button id="lb-plus-sab">+</button></div>
+          </div>
+          <div><span class="field-label">Thám tử</span>
+            <div class="stepper"><button id="lb-minus-det">−</button><span class="value" id="lb-det-count">0</span><button id="lb-plus-det">+</button></div>
+          </div>
+          <div><span class="field-label">Thợ săn</span>
+            <div class="stepper"><button id="lb-minus-hun">−</button><span class="value" id="lb-hun-count">0</span><button id="lb-plus-hun">+</button></div>
+          </div>
+          <div><span class="field-label">Dân ngu</span>
+            <div class="stepper"><button id="lb-minus-fool">−</button><span class="value" id="lb-fool-count">0</span><button id="lb-plus-fool">+</button></div>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <button class="toggle-switch" id="lb-whitehint-toggle" aria-pressed="false"><span class="knob"></span></button>
+          <div><div class="toggle-title">Gợi ý cho Mr. White</div><div class="toggle-caption" id="lb-whitehint-caption">Tắt — Mr. White không biết gì cả</div></div>
+        </div>
+
+        <span class="field-label" style="margin-top:14px; display:block;">Thời gian hỏi cung (phút)</span>
+        <div class="stepper"><button id="lb-minus-time">−</button><span class="value" id="lb-time-count">8</span><button id="lb-plus-time">+</button></div>
+
+        <button class="btn" id="lobby-start-btn" style="margin-top:18px;">Bắt Đầu Chia Hồ Sơ</button>
+        <div class="hint" id="lobby-validation"></div>
+      </div>
+
+      <div id="lobby-guest-note" class="hint">Đang chờ chủ phòng cấu hình và bắt đầu ván chơi...</div>
+    </div>
+  </div>
+
+  <!-- REVEAL (riêng tư từng máy) -->
+  <div class="screen" id="screen-reveal">
+    <div class="card">
+      <div class="field-label">Hồ Sơ Của Bạn</div>
+      <button class="envelope-trigger" id="my-envelope-btn">
+        <span class="envelope-trigger-icon">✉️</span>
+        <span class="envelope-trigger-label" id="my-envelope-label">Chạm Để Mở Hồ Sơ Mật</span>
+      </button>
+      <div class="hint">Chỉ mình bạn thấy nội dung này trên máy của bạn.</div>
+
+      <span class="field-label" style="margin-top:18px; display:block;">Trạng thái mọi người (<span id="reveal-peeked-count">0</span>/<span id="reveal-total-count">0</span> đã xem)</span>
+      <div class="player-list" id="reveal-player-list"></div>
+
+      <div id="reveal-host-controls" style="display:none;">
+        <button class="btn" id="start-timer-btn" style="margin-top:8px;">Bắt Đầu Đếm Giờ →</button>
+      </div>
+      <div id="reveal-guest-note" class="hint">Đang chờ chủ phòng bắt đầu đếm giờ...</div>
+    </div>
+  </div>
+
+  <div class="reveal-modal-overlay" id="my-reveal-modal">
+    <div class="reveal-panel">
+      <button class="rp-close" id="my-reveal-close" type="button">✕</button>
+      <div class="stamp-zone" id="my-stamp-zone">
+        <div class="envelope-flap"></div>
+        <div class="card-pullout" id="my-card-pullout">
+          <div class="dossier" id="my-dossier">
+            <div class="role-eyebrow" id="my-role-eyebrow">TỪ KHÓA</div>
+            <div class="role-loc" id="my-role-loc">—</div>
+            <div class="role-title" id="my-role-title">—</div>
+          </div>
+        </div>
+        <div class="pull-hint" id="my-pull-hint"><div class="pull-grip"></div><div class="pull-label">↑ Kéo Lên Để Xem</div></div>
+      </div>
+
+      <div id="ability-detective" class="ability-box" style="display:none;">
+        <span class="field-label">🔍 Chọn 2 người để điều tra</span>
+        <div class="target-list" id="ability-detective-list"></div>
+        <button class="btn small" id="ability-detective-btn" style="margin-top:10px; background:var(--detective); border:1px solid var(--detective); color:var(--ink); box-shadow:none;">Điều Tra</button>
+        <div id="ability-detective-result" class="ability-result" style="display:none;"></div>
+      </div>
+
+      <div id="ability-hunter" class="ability-box" style="display:none;">
+        <span class="field-label">🏹 Chọn 1 người để gài bẫy</span>
+        <div class="target-list" id="ability-hunter-list"></div>
+        <button class="btn small" id="ability-hunter-btn" style="margin-top:10px; background:var(--hunter); border:1px solid var(--hunter); color:var(--ink); box-shadow:none;">Gài Bẫy</button>
+        <div id="ability-hunter-result" class="ability-result" style="display:none;"></div>
+      </div>
+
+      <div id="ability-fool" class="ability-box" style="display:none;">
+        <span class="field-label">👀 Chọn 1 người để xem trộm</span>
+        <div class="target-list" id="ability-fool-list"></div>
+        <button class="btn small" id="ability-fool-btn" style="margin-top:10px; background:var(--fool); border:1px solid var(--fool); color:var(--ink); box-shadow:none;">Xem Trộm</button>
+        <div id="ability-fool-result" class="ability-result" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIMER -->
+  <div class="screen" id="screen-timer">
+    <div class="card">
+      <div class="starter-box"><div class="sl">🎯 Người Bắt Đầu Gợi Ý</div><div class="sn" id="starter-name">—</div></div>
+      <div class="timer-face" id="timer-face">08:00</div>
+      <div class="timer-sub">Mô tả từ khóa của bạn — đừng nói ra trực tiếp!</div>
+
+      <div id="timer-host-controls" style="display:none; margin-top:16px;">
+        <button class="btn" id="end-timer-btn">Kết Thúc &amp; Bỏ Phiếu</button>
+      </div>
+      <div id="timer-guest-note" class="hint" style="text-align:center;">Chủ phòng sẽ kết thúc phiên khi sẵn sàng.</div>
+    </div>
+  </div>
+
+  <!-- VOTE -->
+  <div class="screen" id="screen-vote">
+    <div class="card">
+      <span class="field-label">Giai Đoạn Bỏ Phiếu</span>
+      <div class="vote-progress" id="vote-progress">Đã lật 0/0 hồ sơ</div>
+      <div class="hint tight">Chạm vào tên một người để cả phòng cùng lật hồ sơ của họ.</div>
+      <div id="vote-end-banner" style="display:none;"></div>
+      <div id="vote-list" style="margin-top:12px;"></div>
+      <div id="vote-host-controls" style="display:none; margin-top:10px;">
+        <button class="btn" id="finish-vote-btn">Xem Tổng Kết Đầy Đủ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="reveal-spin-overlay" id="spin-overlay">
+    <div class="spin-stage"><div class="spin-inner" id="spin-inner">
+      <div class="spin-face"><div class="spin-icon-q">❓</div><div class="pull-label">ĐANG XÁC MINH…</div></div>
+      <div class="spin-face back" id="spin-face-back"><div class="spin-icon" id="spin-icon">🙂</div><div class="spin-name" id="spin-name">—</div><div class="spin-role" id="spin-role">—</div></div>
+    </div></div>
+    <div class="spin-taphint" id="spin-taphint">Chạm để đóng</div>
+  </div>
+
+  <div class="reveal-modal-overlay" id="mrwhite-guess-overlay">
+    <div class="reveal-panel">
+      <div class="field-label" style="color:var(--ghost);">👻 Mr. White Bị Lộ!</div>
+      <div class="hint tight" id="mrwhite-guess-context"></div>
+      <div id="mrwhite-guess-self" style="display:none; margin-top:12px;">
+        <input class="text-input" id="mrwhite-guess-input" placeholder="Nhập từ khóa bạn đoán...">
+        <button class="btn" id="mrwhite-guess-btn" style="margin-top:12px; background:var(--ghost); border:1px solid var(--ghost); color:var(--ink); box-shadow:none;">Xác Nhận Đoán</button>
+      </div>
+      <div id="mrwhite-guess-waiting" class="mrwhite-wait" style="display:none; margin-top:12px;"><div class="mw-t">Đang chờ Mr. White đoán từ khóa…</div></div>
+      <div id="mrwhite-guess-result" class="ability-result" style="display:none; margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="screen" id="screen-summary">
+    <div class="card">
+      <span class="field-label">Kết Quả — Đã Giải Mật</span>
+      <div class="role-loc" style="text-align:left; font-size:20px; margin-bottom:10px;" id="summary-location"></div>
+      <div id="summary-list"></div>
+
+      <div id="summary-host-controls" style="display:none; margin-top:18px;">
+        <button class="btn" id="replay-btn">Chơi Lại (Cùng Người Chơi)</button>
+        <button class="btn secondary small" id="back-lobby-btn">◀ Về Phòng Chờ (Đổi Cấu Hình)</button>
+      </div>
+      <div id="summary-guest-note" class="hint" style="text-align:center; margin-top:14px;">Đang chờ chủ phòng bắt đầu ván tiếp theo...</div>
+    </div>
+  </div>
+
+  <div class="confirm-overlay" id="confirm-overlay">
+    <div class="confirm-panel">
+      <div class="field-label" id="confirm-title">Xác Nhận</div>
+      <div class="hint tight" id="confirm-message"></div>
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button class="btn secondary small" id="confirm-cancel" style="flex:1; margin-top:0;">Hủy</button>
+        <button class="btn small" id="confirm-ok" style="flex:1; margin-top:0;">Xác Nhận</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>Nhiều máy · Đồng bộ thời gian thực qua Firebase</footer>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import {
+  getDatabase, ref, set, get, update, onValue, runTransaction, remove
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBpCK2MLxAHkCAzDj03tErRy00pAiGm3P0",
+  authDomain: "kemaodanh-ec3e1.firebaseapp.com",
+  databaseURL: "https://kemaodanh-ec3e1-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "kemaodanh-ec3e1",
+  storageBucket: "kemaodanh-ec3e1.firebasestorage.app",
+  messagingSenderId: "829434540255",
+  appId: "1:829434540255:web:2f808b0b6bd700603d796a"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+(function(){
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+/* ---------- Danh tính người chơi (lưu trên máy này) ---------- */
+function getMyId(){
+  let id = localStorage.getItem('kmd_online_pid');
+  if(!id){
+    id = 'p_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+    localStorage.setItem('kmd_online_pid', id);
+  }
+  return id;
+}
+const myId = getMyId();
+
+/* ---------- Dữ liệu từ khóa (rút gọn từ bản 1 máy) ---------- */
+const WORD_PAIRS = [
+  { cat:'food', main:"Bánh Mì", decoy:"Bánh Bao", hint:"Món ăn làm từ bột mì" },
+  { cat:'food', main:"Pizza", decoy:"Mì Ý", hint:"Món ăn có nguồn gốc từ Ý" },
+  { cat:'food', main:"Phở", decoy:"Bún Bò", hint:"Món nước truyền thống Việt Nam" },
+  { cat:'drink', main:"Cà Phê", decoy:"Trà Sữa", hint:"Một loại đồ uống phổ biến" },
+  { cat:'drink', main:"Bia", decoy:"Rượu Vang", hint:"Đồ uống có cồn" },
+  { cat:'animal', main:"Chó", decoy:"Mèo", hint:"Một loại thú cưng nuôi trong nhà" },
+  { cat:'animal', main:"Sư Tử", decoy:"Hổ", hint:"Một loài động vật ăn thịt lớn" },
+  { cat:'sport', main:"Bóng Đá", decoy:"Bóng Rổ", hint:"Một môn thể thao dùng bóng" },
+  { cat:'vehicle', main:"Xe Máy", decoy:"Xe Đạp", hint:"Phương tiện di chuyển hai bánh" },
+  { cat:'vehicle', main:"Máy Bay", decoy:"Trực Thăng", hint:"Phương tiện di chuyển trên không" },
+  { cat:'nature', main:"Biển", decoy:"Hồ", hint:"Một vùng nước lớn tự nhiên" },
+  { cat:'nature', main:"Núi", decoy:"Đồi", hint:"Địa hình cao hơn mặt đất" },
+  { cat:'object', main:"Đồng Hồ", decoy:"Vòng Tay", hint:"Vật đeo trên cổ tay" },
+  { cat:'object', main:"Giày", decoy:"Dép", hint:"Đồ dùng mang ở chân" },
+  { cat:'tech', main:"Điện Thoại", decoy:"Máy Tính Bảng", hint:"Một thiết bị điện tử cầm tay" },
+  { cat:'music', main:"Đàn Piano", decoy:"Đàn Guitar", hint:"Một loại nhạc cụ" }
+];
+const CATEGORIES = [
+  { key:'all', label:'Tất Cả' }, { key:'food', label:'Ẩm Thực' }, { key:'drink', label:'Đồ Uống' },
+  { key:'animal', label:'Động Vật' }, { key:'sport', label:'Thể Thao' }, { key:'vehicle', label:'Phương Tiện' },
+  { key:'nature', label:'Thiên Nhiên' }, { key:'object', label:'Đồ Vật & Phụ Kiện' }, { key:'tech', label:'Công Nghệ' },
+  { key:'music', label:'Âm Nhạc' }
+];
+
+const SPY_TITLE="KẺ MẠO DANH", WHITE_TITLE="MR. WHITE", SABOTEUR_TITLE="KẺ PHÁ GAME",
+      DETECTIVE_TITLE="THÁM TỬ", HUNTER_TITLE="THỢ SĂN", FOOL_TITLE="DÂN NGU";
+const ROLE_ICON = { spy:'🕵️', mrwhite:'👻', saboteur:'🃏', detective:'🔍', hunter:'🏹', foolvillager:'👀', villager:'🙂' };
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function genRoomCode(){
+  const chars='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let s=''; for(let i=0;i<5;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+
+/* ---------- Trạng thái cục bộ (mirror từ DB) ---------- */
+let roomCode = null;
+let room = null; // toàn bộ dữ liệu /rooms/{code}
+let isHost = false;
+let unsubRoom = null;
+let confirmCb = null;
+let localAbilityState = { detSel:[], hunSel:null, foolSel:null };
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+function showConfirm(msg, cb){
+  $('confirm-message').textContent = msg;
+  confirmCb = cb;
+  $('confirm-overlay').classList.add('active');
+}
+$('confirm-ok').onclick = () => { $('confirm-overlay').classList.remove('active'); const cb=confirmCb; confirmCb=null; if(cb) cb(); };
+$('confirm-cancel').onclick = () => { $('confirm-overlay').classList.remove('active'); confirmCb=null; };
+
+/* ---------- Landing: tạo / tham gia phòng ---------- */
+$('create-room-btn').onclick = async () => {
+  const name = $('my-name-input').value.trim();
+  if(!name){ $('landing-status').textContent='Hãy nhập tên của bạn trước.'; return; }
+  const code = genRoomCode();
+  const initial = {
+    createdAt: Date.now(),
+    hostId: myId,
+    status: 'lobby',
+    config: { theme:'all', numSpies:1, numWhite:0, numSaboteur:0, numDetective:0, numHunter:0, numFool:0, whiteHint:false, minutes:8 },
+    players: { [myId]: { name, joinedAt: Date.now() } }
+  };
+  try{
+    await set(ref(db, 'rooms/'+code), initial);
+    isHost = true;
+    joinRoomStream(code);
+  } catch(err){
+    $('landing-status').textContent = 'Không tạo được phòng — kiểm tra kết nối mạng và thử lại.';
+  }
+};
+
+$('join-room-btn').onclick = async () => {
+  const name = $('my-name-input').value.trim();
+  const code = $('join-code-input').value.trim().toUpperCase();
+  if(!name){ $('landing-status').textContent='Hãy nhập tên của bạn trước.'; return; }
+  if(!code){ $('landing-status').textContent='Hãy nhập mã phòng.'; return; }
+  try{
+    const snap = await get(ref(db, 'rooms/'+code));
+    if(!snap.exists()){ $('landing-status').textContent='Không tìm thấy phòng với mã này.'; return; }
+    await update(ref(db, 'rooms/'+code+'/players/'+myId), { name, joinedAt: Date.now() });
+    isHost = snap.val().hostId === myId;
+    joinRoomStream(code);
+  } catch(err){
+    $('landing-status').textContent = 'Không tham gia được — kiểm tra kết nối mạng và thử lại.';
+  }
+};
+
+function joinRoomStream(code){
+  roomCode = code;
+  if(unsubRoom) unsubRoom();
+  unsubRoom = onValue(ref(db, 'rooms/'+code), snap => {
+    room = snap.val();
+    if(!room) return;
+    isHost = room.hostId === myId;
+    renderAll();
+  });
+}
+
+/* ---------- Điều phối render theo trạng thái phòng ---------- */
+function renderAll(){
+  if(!room) return;
+  if(room.status === 'lobby'){ showScreen('screen-lobby'); renderLobby(); }
+  else if(room.status === 'reveal'){ showScreen('screen-reveal'); renderRevealScreen(); }
+  else if(room.status === 'timer'){ showScreen('screen-timer'); renderTimerScreen(); }
+  else if(room.status === 'voting'){ showScreen('screen-vote'); renderVoteScreen(); }
+  else if(room.status === 'ended'){ showScreen('screen-summary'); renderSummary(); }
+}
+
+function playerIds(){ return room.players ? Object.keys(room.players) : []; }
+function playerName(pid){ return (room.players && room.players[pid] && room.players[pid].name) || '???'; }
+function numPlayers(){ return playerIds().length; }
+
+/* ---------- LOBBY ---------- */
+let themeSelectBuilt = false;
+function renderLobby(){
+  $('lobby-room-code').textContent = roomCode;
+  const ids = playerIds();
+  $('lobby-count').textContent = ids.length;
+  const list = $('lobby-player-list');
+  list.innerHTML = '';
+  ids.forEach(pid => {
+    const row = document.createElement('div');
+    row.className = 'player-row';
+    row.innerHTML = '<span>'+playerName(pid)+(pid===myId?' (bạn)':'')+'</span>' + (pid===room.hostId ? '<span class="tag">Chủ phòng</span>' : '');
+    list.appendChild(row);
+  });
+
+  $('lobby-host-controls').style.display = isHost ? 'block' : 'none';
+  $('lobby-guest-note').style.display = isHost ? 'none' : 'block';
+
+  if(isHost){
+    if(!themeSelectBuilt){
+      const sel = $('lobby-theme-select');
+      sel.innerHTML = CATEGORIES.map(c => '<option value="'+c.key+'">'+c.label+'</option>').join('');
+      sel.onchange = e => update(ref(db,'rooms/'+roomCode+'/config'), { theme: e.target.value });
+      themeSelectBuilt = true;
+    }
+    $('lobby-theme-select').value = room.config.theme;
+    $('lb-spies-count').textContent = room.config.numSpies;
+    $('lb-whites-count').textContent = room.config.numWhite;
+    $('lb-sab-count').textContent = room.config.numSaboteur;
+    $('lb-det-count').textContent = room.config.numDetective;
+    $('lb-hun-count').textContent = room.config.numHunter;
+    $('lb-fool-count').textContent = room.config.numFool;
+    $('lb-time-count').textContent = room.config.minutes;
+    $('lb-whitehint-toggle').setAttribute('aria-pressed', room.config.whiteHint ? 'true':'false');
+    $('lb-whitehint-caption').textContent = room.config.whiteHint ? 'Bật — Mr. White nhận gợi ý mơ hồ' : 'Tắt — Mr. White không biết gì cả';
+
+    const n = ids.length;
+    const others = room.config.numWhite+room.config.numSaboteur+room.config.numDetective+room.config.numHunter+room.config.numFool;
+    const villagers = n - room.config.numSpies - others;
+    if(n < 3){
+      $('lobby-validation').textContent = 'Cần ít nhất 3 người chơi tham gia trước khi bắt đầu.';
+    } else if(villagers <= room.config.numSpies){
+      $('lobby-validation').textContent = 'Số Dân Thường phải nhiều hơn số Kẻ Mạo Danh ít nhất 1 người — hãy điều chỉnh lại.';
+    } else if(room.config.numSpies + room.config.numWhite + room.config.numSaboteur < 1){
+      $('lobby-validation').textContent = 'Cần ít nhất 1 Kẻ Mạo Danh, Mr. White, hoặc Kẻ Phá Game.';
+    } else {
+      $('lobby-validation').textContent = '';
+    }
+  }
+}
+
+function cfgStepper(id, field, min, max){
+  $('lb-minus-'+id).onclick = () => {
+    const v = Math.max(min, room.config[field]-1);
+    update(ref(db,'rooms/'+roomCode+'/config'), { [field]: v });
+  };
+  $('lb-plus-'+id).onclick = () => {
+    const v = Math.min(max, room.config[field]+1);
+    update(ref(db,'rooms/'+roomCode+'/config'), { [field]: v });
+  };
+}
+cfgStepper('spies','numSpies',0,99);
+cfgStepper('whites','numWhite',0,99);
+cfgStepper('sab','numSaboteur',0,99);
+cfgStepper('det','numDetective',0,99);
+cfgStepper('hun','numHunter',0,99);
+cfgStepper('fool','numFool',0,99);
+$('lb-minus-time').onclick = () => update(ref(db,'rooms/'+roomCode+'/config'), { minutes: Math.max(1, room.config.minutes-1) });
+$('lb-plus-time').onclick = () => update(ref(db,'rooms/'+roomCode+'/config'), { minutes: Math.min(20, room.config.minutes+1) });
+$('lb-whitehint-toggle').onclick = () => update(ref(db,'rooms/'+roomCode+'/config'), { whiteHint: !room.config.whiteHint });
+
+$('lobby-start-btn').onclick = () => startRound(false);
+
+/* ---------- Bắt đầu / random ván ---------- */
+async function startRound(keepScores){
+  const ids = playerIds();
+  const cfg = room.config;
+  const pool = cfg.theme==='all' ? WORD_PAIRS : WORD_PAIRS.filter(p=>p.cat===cfg.theme);
+  const pair = pool[Math.floor(Math.random()*pool.length)];
+
+  const order = shuffle(ids);
+  const spyIdx = new Set(order.slice(0, cfg.numSpies));
+  const whiteIdx = new Set(order.slice(cfg.numSpies, cfg.numSpies+cfg.numWhite));
+  const sabIdx = new Set(order.slice(cfg.numSpies+cfg.numWhite, cfg.numSpies+cfg.numWhite+cfg.numSaboteur));
+  const detIdx = new Set(order.slice(cfg.numSpies+cfg.numWhite+cfg.numSaboteur, cfg.numSpies+cfg.numWhite+cfg.numSaboteur+cfg.numDetective));
+  const hunIdx = new Set(order.slice(cfg.numSpies+cfg.numWhite+cfg.numSaboteur+cfg.numDetective, cfg.numSpies+cfg.numWhite+cfg.numSaboteur+cfg.numDetective+cfg.numHunter));
+  const foolIdx = new Set(order.slice(cfg.numSpies+cfg.numWhite+cfg.numSaboteur+cfg.numDetective+cfg.numHunter, cfg.numSpies+cfg.numWhite+cfg.numSaboteur+cfg.numDetective+cfg.numHunter+cfg.numFool));
+
+  const assignments = {};
+  ids.forEach(pid => {
+    if(whiteIdx.has(pid)) assignments[pid] = { role:'mrwhite' };
+    else if(spyIdx.has(pid)) assignments[pid] = { role:'spy', word: pair.decoy };
+    else if(sabIdx.has(pid)) assignments[pid] = { role:'saboteur', word: Math.random()<0.5?pair.main:pair.decoy };
+    else if(detIdx.has(pid)) assignments[pid] = { role:'detective' };
+    else if(hunIdx.has(pid)) assignments[pid] = { role:'hunter', word: pair.main };
+    else if(foolIdx.has(pid)) assignments[pid] = { role:'foolvillager' };
+    else assignments[pid] = { role:'villager', word: pair.main };
+  });
+
+  const scores = {};
+  ids.forEach(pid => { scores[pid] = (keepScores && room.round && room.round.scores && room.round.scores[pid]) || 0; });
+
+  const newRound = {
+    location: pair.main, decoyWord: pair.decoy, hintText: pair.hint,
+    assignments, scores,
+    peeked: {}, voteRevealed: {}, hunterTraps: {},
+    voteEnded: false, voteOutcome: null,
+    pendingReveal: null, mrwhiteGuessPending: null,
+    starterId: null, timerEndsAt: null, timerDurationSec: cfg.minutes*60
+  };
+
+  await update(ref(db, 'rooms/'+roomCode), { status:'reveal', round: newRound });
+}
+
+/* ---------- REVEAL SCREEN (danh sách + trạng thái chung) ---------- */
+function renderRevealScreen(){
+  const ids = playerIds();
+  const peekedCount = room.round.peeked ? Object.keys(room.round.peeked).length : 0;
+  $('reveal-peeked-count').textContent = peekedCount;
+  $('reveal-total-count').textContent = ids.length;
+  const list = $('reveal-player-list');
+  list.innerHTML = '';
+  ids.forEach(pid => {
+    const peeked = room.round.peeked && room.round.peeked[pid];
+    const row = document.createElement('div');
+    row.className = 'player-row';
+    row.innerHTML = '<span>'+playerName(pid)+(pid===myId?' (bạn)':'')+'</span><span class="tag">'+(peeked?'Đã xem':'Chưa xem')+'</span>';
+    list.appendChild(row);
+  });
+  $('reveal-host-controls').style.display = isHost ? 'block' : 'none';
+  $('reveal-guest-note').style.display = isHost ? 'none' : 'block';
+
+  const a = room.round.assignments[myId];
+  $('my-envelope-label').textContent = (room.round.peeked && room.round.peeked[myId]) ? 'Xem Lại Hồ Sơ Mật' : 'Chạm Để Mở Hồ Sơ Mật';
+  window.__myRole = a; // dùng cho modal reveal
+}
+
+$('start-timer-btn').onclick = async () => {
+  const ids = playerIds();
+  const eligible = ids.filter(pid => room.round.assignments[pid].role !== 'mrwhite');
+  const pool2 = eligible.length ? eligible : ids;
+  const starterId = pool2[Math.floor(Math.random()*pool2.length)];
+  await update(ref(db,'rooms/'+roomCode+'/round'), {
+    starterId, timerEndsAt: Date.now() + room.round.timerDurationSec*1000
+  });
+  await update(ref(db,'rooms/'+roomCode), { status:'timer' });
+};
+
+/* ---------- Modal xem hồ sơ riêng (kéo phong bì) ---------- */
+$('my-envelope-btn').onclick = () => {
+  const a = room.round.assignments[myId];
+  renderMyDossier(a);
+  $('my-pull-hint').classList.remove('hidden');
+  $('my-card-pullout').style.transition='none';
+  $('my-card-pullout').style.transform='translateY(100%)';
+  hideAllAbilityBoxes();
+  $('my-reveal-modal').classList.add('active');
+};
+$('my-reveal-close').onclick = () => $('my-reveal-modal').classList.remove('active');
+$('my-reveal-modal').addEventListener('click', e => { if(e.target.id==='my-reveal-modal') $('my-reveal-modal').classList.remove('active'); });
+
+function renderMyDossier(a){
+  const dossier = $('my-dossier');
+  dossier.classList.remove('spy','saboteur','detective','hunter','foolvillager');
+  if(a.role === 'mrwhite'){
+    $('my-role-eyebrow').textContent='BẠN LÀ'; $('my-role-loc').textContent=WHITE_TITLE;
+    $('my-role-title').textContent = room.config.whiteHint ? ('Gợi ý: '+room.round.hintText+'. Hãy bịa thật khéo!') : 'Bạn không có từ khóa nào cả. Hãy bịa thật khéo!';
+    dossier.classList.add('spy');
+  } else if(a.role === 'saboteur'){
+    $('my-role-eyebrow').textContent='BẠN LÀ'; $('my-role-loc').textContent=SABOTEUR_TITLE;
+    $('my-role-title').textContent = 'Từ khóa: "'+a.word+'". Bạn THẮNG nếu bị vote trúng — hãy cố tình đáng nghi!';
+    dossier.classList.add('saboteur');
+  } else if(a.role === 'detective'){
+    $('my-role-eyebrow').textContent='BẠN LÀ'; $('my-role-loc').textContent=DETECTIVE_TITLE;
+    $('my-role-title').textContent = 'Gợi ý: '+room.round.hintText+'. Chọn 2 người bên dưới để điều tra!';
+    dossier.classList.add('detective');
+  } else if(a.role === 'hunter'){
+    $('my-role-eyebrow').textContent='BẠN LÀ'; $('my-role-loc').textContent=HUNTER_TITLE;
+    $('my-role-title').textContent = 'Từ khóa: "'+a.word+'". Chọn 1 người bên dưới để gài bẫy!';
+    dossier.classList.add('hunter');
+  } else if(a.role === 'foolvillager'){
+    $('my-role-eyebrow').textContent='BẠN LÀ'; $('my-role-loc').textContent=FOOL_TITLE;
+    $('my-role-title').textContent = 'Không có từ khóa — chọn 1 người bên dưới để xem trộm!';
+    dossier.classList.add('foolvillager');
+  } else {
+    $('my-role-eyebrow').textContent='TỪ KHÓA'; $('my-role-loc').textContent=a.word;
+    $('my-role-title').textContent = 'Ghi nhớ từ khóa này. Đừng nói ra trực tiếp!';
+  }
+}
+
+function hideAllAbilityBoxes(){
+  $('ability-detective').style.display='none';
+  $('ability-hunter').style.display='none';
+  $('ability-fool').style.display='none';
+}
+
+let dragState = null;
+function applyPull(p){ $('my-card-pullout').style.transform = 'translateY('+((1-p)*100)+'%)'; }
+function onDragStart(e){
+  const zone = $('my-stamp-zone');
+  dragState = { startY:e.clientY, zoneH: zone.getBoundingClientRect().height, moved:false, progress: dragState&&dragState.open?1:0 };
+  $('my-card-pullout').style.transition='none';
+  document.addEventListener('pointermove', onDragMove);
+  document.addEventListener('pointerup', onDragEnd);
+}
+function onDragMove(e){
+  if(!dragState) return;
+  const dy = dragState.startY - e.clientY;
+  if(Math.abs(dy)>4) dragState.moved=true;
+  let p = (dragState.progress||0) + dy/dragState.zoneH;
+  p = Math.max(0, Math.min(1,p));
+  dragState.last = p;
+  applyPull(p);
+}
+function onDragEnd(){
+  if(!dragState) return;
+  document.removeEventListener('pointermove', onDragMove);
+  document.removeEventListener('pointerup', onDragEnd);
+  const open = dragState.moved ? (dragState.last>0.5) : !(dragState.progress>=0.5);
+  $('my-card-pullout').style.transition='transform .3s cubic-bezier(.16,1,.3,1)';
+  applyPull(open?1:0);
+  $('my-pull-hint').classList.toggle('hidden', open);
+  dragState = { progress: open?1:0, open };
+  if(open){
+    update(ref(db,'rooms/'+roomCode+'/round/peeked'), { [myId]: true });
+    showAbilityForRole(room.round.assignments[myId]);
+  } else {
+    hideAllAbilityBoxes();
+  }
+}
+$('my-stamp-zone').addEventListener('pointerdown', onDragStart);
+
+function showAbilityForRole(a){
+  hideAllAbilityBoxes();
+  const others = playerIds().filter(pid => pid !== myId);
+  if(a.role === 'detective'){
+    $('ability-detective').style.display='block';
+    const listEl = $('ability-detective-list');
+    listEl.innerHTML='';
+    others.forEach(pid=>{
+      const checked = localAbilityState.detSel.includes(pid);
+      const it=document.createElement('label'); it.className='target-item'+(checked?' checked':'');
+      it.innerHTML='<input type="checkbox" data-pid="'+pid+'"'+(checked?' checked':'')+'> '+playerName(pid);
+      listEl.appendChild(it);
+    });
+    listEl.querySelectorAll('input').forEach(cb=>cb.addEventListener('change', e=>{
+      const pid=e.target.dataset.pid;
+      if(e.target.checked){ if(localAbilityState.detSel.length>=2){ e.target.checked=false; return; } localAbilityState.detSel.push(pid); }
+      else localAbilityState.detSel = localAbilityState.detSel.filter(x=>x!==pid);
+      showAbilityForRole(a);
+    }));
+  } else if(a.role === 'hunter'){
+    $('ability-hunter').style.display='block';
+    const listEl=$('ability-hunter-list'); listEl.innerHTML='';
+    others.forEach(pid=>{
+      const checked = localAbilityState.hunSel===pid;
+      const it=document.createElement('label'); it.className='target-item'+(checked?' checked':'');
+      it.innerHTML='<input type="radio" name="hunsel" data-pid="'+pid+'"'+(checked?' checked':'')+'> '+playerName(pid);
+      listEl.appendChild(it);
+    });
+    listEl.querySelectorAll('input').forEach(rb=>rb.addEventListener('change', e=>{ localAbilityState.hunSel=e.target.dataset.pid; showAbilityForRole(a); }));
+  } else if(a.role === 'foolvillager'){
+    $('ability-fool').style.display='block';
+    const listEl=$('ability-fool-list'); listEl.innerHTML='';
+    others.forEach(pid=>{
+      const checked = localAbilityState.foolSel===pid;
+      const it=document.createElement('label'); it.className='target-item'+(checked?' checked':'');
+      it.innerHTML='<input type="radio" name="foolsel" data-pid="'+pid+'"'+(checked?' checked':'')+'> '+playerName(pid);
+      listEl.appendChild(it);
+    });
+    listEl.querySelectorAll('input').forEach(rb=>rb.addEventListener('change', e=>{ localAbilityState.foolSel=e.target.dataset.pid; showAbilityForRole(a); }));
+  }
+}
+
+$('ability-detective-btn').onclick = () => {
+  if(localAbilityState.detSel.length !== 2){ showConfirm('Hãy chọn đúng 2 người trước khi điều tra.', ()=>{}); return; }
+  const [x,y] = localAbilityState.detSel;
+  const ax = room.round.assignments[x], ay = room.round.assignments[y];
+  const wx = ax.word!==undefined ? ax.word : null;
+  const wy = ay.word!==undefined ? ay.word : null;
+  const match = (wx===null && wy===null) || (wx!==null && wy!==null && wx===wy);
+  const el = $('ability-detective-result');
+  el.style.display='block';
+  el.className='ability-result '+(match?'ok':'no');
+  el.innerHTML = '<div class="art">'+(match?'🔍 TRÙNG TỪ KHÓA':'🔍 KHÁC TỪ KHÓA')+'</div><div class="ars">'+playerName(x)+' & '+playerName(y)+'</div>';
+};
+
+$('ability-hunter-btn').onclick = async () => {
+  if(!localAbilityState.hunSel){ showConfirm('Hãy chọn 1 người trước khi gài bẫy.', ()=>{}); return; }
+  await update(ref(db,'rooms/'+roomCode+'/round/hunterTraps'), { [myId]: localAbilityState.hunSel });
+  const el=$('ability-hunter-result'); el.style.display='block'; el.className='ability-result ok';
+  el.innerHTML='<div class="art">🏹 ĐÃ GÀI BẪY</div><div class="ars">Mục tiêu: '+playerName(localAbilityState.hunSel)+'</div>';
+  $('ability-hunter-list').style.display='none';
+  $('ability-hunter-btn').style.display='none';
+};
+
+$('ability-fool-btn').onclick = () => {
+  if(!localAbilityState.foolSel){ showConfirm('Hãy chọn 1 người trước khi xem trộm.', ()=>{}); return; }
+  const t = room.round.assignments[localAbilityState.foolSel];
+  const isHint = t.word===undefined;
+  const value = isHint ? room.round.hintText : t.word;
+  const el=$('ability-fool-result'); el.style.display='block'; el.className='ability-result ok';
+  el.innerHTML = isHint
+    ? '<div class="art">👀 Gợi Ý Của '+playerName(localAbilityState.foolSel)+'</div><div class="ars">"'+value+'"</div>'
+    : '<div class="art">👀 Từ Khóa Của '+playerName(localAbilityState.foolSel)+'</div><div class="ars">"'+value+'"</div>';
+  $('ability-fool-list').style.display='none';
+  $('ability-fool-btn').style.display='none';
+};
+
+/* ---------- TIMER ---------- */
+let timerInterval = null;
+function renderTimerScreen(){
+  $('starter-name').textContent = playerName(room.round.starterId);
+  $('timer-host-controls').style.display = isHost ? 'block' : 'none';
+  $('timer-guest-note').style.display = isHost ? 'none' : 'block';
+  if(timerInterval) clearInterval(timerInterval);
+  tickTimer();
+  timerInterval = setInterval(tickTimer, 1000);
+}
+function tickTimer(){
+  if(room.status !== 'timer') { clearInterval(timerInterval); return; }
+  const remain = Math.max(0, Math.round((room.round.timerEndsAt - Date.now())/1000));
+  const m = Math.floor(remain/60).toString().padStart(2,'0');
+  const s = (remain%60).toString().padStart(2,'0');
+  const face = $('timer-face');
+  face.textContent = m+':'+s;
+  face.classList.toggle('warn', remain<=30);
+}
+$('end-timer-btn').onclick = () => update(ref(db,'rooms/'+roomCode), { status:'voting' });
+
+/* ---------- VOTE ---------- */
+function renderVoteScreen(){
+  const r = room.round;
+  const ids = playerIds();
+  const revealedCount = r.voteRevealed ? Object.keys(r.voteRevealed).length : 0;
+  $('vote-progress').textContent = 'Đã lật '+revealedCount+'/'+ids.length+' hồ sơ';
+
+  const banner = $('vote-end-banner');
+  if(r.voteEnded){
+    banner.style.display='block';
+    let cls='vote-end-banner', html='';
+    if(r.voteOutcome==='villagers'){ html='<div class="bt">🎉 Dân Thường Thắng!</div><div class="bs">Đã tìm ra hết Kẻ Mạo Danh.</div>'; }
+    else if(r.voteOutcome==='spies'){ cls+=' spies-win'; html='<div class="bt">🕵️ Kẻ Mạo Danh Thắng!</div><div class="bs">Đã cân bằng lực lượng.</div>'; }
+    else if(r.voteOutcome==='saboteur'){ cls+=' saboteur-win'; html='<div class="bt">🃏 Kẻ Phá Game Thắng!</div><div class="bs">'+playerName(r.saboteurWinnerId)+' đã cố tình bị lộ!</div>'; }
+    else if(r.voteOutcome==='hunter'){ cls+=' hunter-win'; html='<div class="bt">🏹 Thợ Săn Thắng!</div><div class="bs">'+playerName(r.hunterWinnerId)+' đã gài bẫy trúng '+playerName(r.hunterTargetId)+'!</div>'; }
+    else if(r.voteOutcome==='mrwhite'){ cls+=' mrwhite-win'; html='<div class="bt">👻 Mr. White Thắng!</div><div class="bs">'+playerName(r.mrwhiteWinnerId)+' đoán đúng từ khóa "'+r.location+'"!</div>'; }
+    banner.className = cls; banner.innerHTML = html;
+  } else banner.style.display='none';
+
+  const list = $('vote-list');
+  list.innerHTML='';
+  ids.forEach(pid=>{
+    const isOpen = r.voteRevealed && r.voteRevealed[pid];
+    const a = r.assignments[pid];
+    const locked = r.voteEnded && !isOpen;
+    const card = document.createElement('div');
+    card.className = 'vote-card'
+      + (isOpen ? ' open '+('is-'+a.role) : '')
+      + (locked ? ' locked' : '');
+    card.innerHTML = '<span>'+playerName(pid)+'</span><span class="status">'+(isOpen?'Đã lật':(locked?'Đã khóa':'Chạm để lật'))+'</span>';
+    if(!isOpen && !locked && !r.pendingReveal) card.onclick = () => tryReveal(pid);
+    list.appendChild(card);
+  });
+
+  $('vote-host-controls').style.display = isHost ? 'block' : 'none';
+
+  // đồng bộ hiệu ứng xoay/lật cho MỌI người khi có pendingReveal
+  if(r.pendingReveal && r.pendingReveal.target){
+    if(!window.__spinShownFor || window.__spinShownFor !== r.pendingReveal.startedAt){
+      window.__spinShownFor = r.pendingReveal.startedAt;
+      playSpinAnimation(r.pendingReveal.target, r.pendingReveal.by === myId);
+    }
+  } else {
+    $('spin-overlay').classList.remove('active');
+    window.__spinShownFor = null;
+  }
+
+  // Mr. White đang chờ đoán
+  if(r.mrwhiteGuessPending){
+    openMrWhiteGuessUI(r.mrwhiteGuessPending);
+  } else {
+    $('mrwhite-guess-overlay').classList.remove('active');
+  }
+}
+$('finish-vote-btn').onclick = () => update(ref(db,'rooms/'+roomCode), { status:'ended' });
+
+async function tryReveal(targetId){
+  const lockRef = ref(db,'rooms/'+roomCode+'/round/pendingReveal');
+  const result = await runTransaction(lockRef, cur => {
+    if(cur) return; // đã có người khác đang lật
+    return { target: targetId, by: myId, startedAt: Date.now() };
+  });
+  if(!result.committed) return;
+  const snap = result.snapshot.val();
+  if(!snap || snap.by !== myId) return; // thua tranh chấp
+  // Người thắng transaction chịu trách nhiệm tính toán & ghi kết quả sau khi hiệu ứng chạy xong
+  setTimeout(() => finalizeReveal(targetId), 1150);
+}
+
+function playSpinAnimation(targetId, isMine){
+  const a = room.round.assignments[targetId];
+  const roleText = a.role==='spy'?SPY_TITLE:a.role==='mrwhite'?WHITE_TITLE:a.role==='saboteur'?SABOTEUR_TITLE:a.role==='detective'?DETECTIVE_TITLE:a.role==='hunter'?HUNTER_TITLE:a.role==='foolvillager'?FOOL_TITLE:'DÂN THƯỜNG';
+  $('spin-icon').textContent = ROLE_ICON[a.role] || ROLE_ICON.villager;
+  $('spin-name').textContent = playerName(targetId);
+  $('spin-role').textContent = roleText;
+  const back = $('spin-face-back');
+  back.className = 'spin-face back is-'+a.role;
+  const inner = $('spin-inner');
+  inner.classList.remove('spinning'); void inner.offsetWidth;
+  $('spin-taphint').classList.remove('show');
+  $('spin-overlay').classList.add('active');
+  inner.classList.add('spinning');
+  setTimeout(()=> $('spin-taphint').classList.add('show'), 1150);
+}
+$('spin-overlay').addEventListener('click', () => {
+  // chỉ ẩn hiệu ứng cục bộ; dữ liệu thật đã/ sẽ được ghi bởi người thắng transaction
+  if(!room.round.pendingReveal) $('spin-overlay').classList.remove('active');
+});
+
+function remainingCounts(r){
+  let spies=0, nonSpies=0;
+  playerIds().forEach(pid=>{
+    if(r.voteRevealed && r.voteRevealed[pid]) return;
+    const role = r.assignments[pid].role;
+    if(role==='spy') spies++; else nonSpies++;
+  });
+  return { spies, nonSpies };
+}
+
+async function finalizeReveal(targetId){
+  // Đọc dữ liệu mới nhất để tránh ghi đè lên thay đổi khác
+  const snap = await get(ref(db,'rooms/'+roomCode+'/round'));
+  const r = snap.val();
+  if(!r || (r.voteRevealed && r.voteRevealed[targetId])) { await update(ref(db,'rooms/'+roomCode+'/round'), { pendingReveal:null }); return; }
+
+  const role = r.assignments[targetId].role;
+  const scores = Object.assign({}, r.scores);
+  const voteRevealed = Object.assign({}, r.voteRevealed||{}, { [targetId]: true });
+
+  function applyScoring(rr){
+    if(rr==='villager' || rr==='detective' || rr==='foolvillager'){
+      playerIds().forEach(pid=>{ if(r.assignments[pid].role==='spy') scores[pid]=(scores[pid]||0)+1; });
+    } else if(rr==='spy'){
+      playerIds().forEach(pid=>{ const rl=r.assignments[pid].role; if(rl==='villager'||rl==='detective'||rl==='foolvillager') scores[pid]=(scores[pid]||0)+1; });
+    } else if(rr==='saboteur'){
+      scores[targetId] = (scores[targetId]||0)+2;
+    }
+  }
+
+  if(role === 'mrwhite'){
+    // Không chốt điểm ngay — chuyển sang chờ Mr. White đoán từ khóa
+    await update(ref(db,'rooms/'+roomCode+'/round'), {
+      voteRevealed, pendingReveal:null, mrwhiteGuessPending: targetId
+    });
+    return;
+  }
+
+  applyScoring(role);
+
+  let patch = { voteRevealed, scores, pendingReveal:null };
+
+  // Kiểm tra bẫy Thợ Săn (mục tiêu vừa bị lật có phải người bị bẫy không)
+  let trapHunter = null;
+  if(r.hunterTraps){
+    for(const hid of Object.keys(r.hunterTraps)){
+      if(r.hunterTraps[hid] === targetId){ trapHunter = hid; break; }
+    }
+  }
+
+  if(role === 'saboteur'){
+    patch.voteEnded = true; patch.voteOutcome = 'saboteur'; patch.saboteurWinnerId = targetId;
+  } else if(trapHunter){
+    scores[trapHunter] = (scores[trapHunter]||0)+3;
+    patch.scores = scores;
+    patch.voteEnded = true; patch.voteOutcome = 'hunter'; patch.hunterWinnerId = trapHunter; patch.hunterTargetId = targetId;
+  } else {
+    const remain = remainingCounts({ assignments:r.assignments, voteRevealed });
+    if(remain.spies === 0){ patch.voteEnded = true; patch.voteOutcome = 'villagers'; }
+    else if(remain.spies === remain.nonSpies){ patch.voteEnded = true; patch.voteOutcome = 'spies'; }
+  }
+
+  await update(ref(db,'rooms/'+roomCode+'/round'), patch);
+}
+
+/* ---------- Mr. White đoán từ khóa ---------- */
+function openMrWhiteGuessUI(targetId){
+  $('mrwhite-guess-overlay').classList.add('active');
+  const mine = targetId === myId;
+  $('mrwhite-guess-context').textContent = mine
+    ? 'Bạn vừa bị lộ! Đoán đúng từ khóa của Dân Thường để thắng ngay (+2 điểm).'
+    : playerName(targetId)+' vừa bị lộ và đang đoán từ khóa...';
+  $('mrwhite-guess-self').style.display = mine ? 'block' : 'none';
+  $('mrwhite-guess-waiting').style.display = mine ? 'none' : 'block';
+  $('mrwhite-guess-result').style.display = 'none';
+}
+function normalizeGuess(s){ return (s||'').trim().toLowerCase().normalize('NFC'); }
+$('mrwhite-guess-btn').onclick = async () => {
+  const targetId = room.round.mrwhiteGuessPending;
+  if(!targetId || targetId !== myId) return;
+  const guess = $('mrwhite-guess-input').value;
+  const correct = guess.trim().length>0 && normalizeGuess(guess) === normalizeGuess(room.round.location);
+
+  const snap = await get(ref(db,'rooms/'+roomCode+'/round'));
+  const r = snap.val();
+  const scores = Object.assign({}, r.scores);
+  let patch = { mrwhiteGuessPending: null };
+
+  if(correct){
+    scores[targetId] = (scores[targetId]||0)+2;
+    patch.scores = scores; patch.voteEnded = true; patch.voteOutcome='mrwhite'; patch.mrwhiteWinnerId = targetId;
+  } else {
+    // đoán sai -> tiếp tục kiểm tra điều kiện kết thúc bình thường (kể cả bẫy thợ săn nếu có)
+    let trapHunter = null;
+    if(r.hunterTraps){
+      for(const hid of Object.keys(r.hunterTraps)){ if(r.hunterTraps[hid]===targetId){ trapHunter=hid; break; } }
+    }
+    if(trapHunter){
+      scores[trapHunter] = (scores[trapHunter]||0)+3;
+      patch.scores = scores;
+      patch.voteEnded=true; patch.voteOutcome='hunter'; patch.hunterWinnerId=trapHunter; patch.hunterTargetId=targetId;
+    } else {
+      const remain = remainingCounts(r);
+      if(remain.spies===0){ patch.voteEnded=true; patch.voteOutcome='villagers'; }
+      else if(remain.spies===remain.nonSpies){ patch.voteEnded=true; patch.voteOutcome='spies'; }
+    }
+  }
+  await update(ref(db,'rooms/'+roomCode+'/round'), patch);
+  $('mrwhite-guess-overlay').classList.remove('active');
+};
+
+/* ---------- SUMMARY ---------- */
+function renderSummary(){
+  const r = room.round;
+  $('summary-location').textContent = 'Từ khóa chính: '+r.location+'  ·  Từ khóa Kẻ Mạo Danh: '+r.decoyWord;
+  const list = $('summary-list');
+  list.innerHTML='';
+  playerIds().forEach(pid=>{
+    const a = r.assignments[pid];
+    const label = a.role==='spy'?SPY_TITLE:a.role==='mrwhite'?WHITE_TITLE:a.role==='saboteur'?SABOTEUR_TITLE:a.role==='detective'?DETECTIVE_TITLE:a.role==='hunter'?HUNTER_TITLE:a.role==='foolvillager'?FOOL_TITLE:'Dân thường';
+    const row = document.createElement('div');
+    row.className='summary-row is-'+a.role;
+    row.innerHTML = '<span class="who">'+playerName(pid)+'</span><span class="what">'+label+' · '+(r.scores[pid]||0)+' điểm</span>';
+    list.appendChild(row);
+  });
+  $('summary-host-controls').style.display = isHost ? 'block' : 'none';
+  $('summary-guest-note').style.display = isHost ? 'none' : 'block';
+}
+$('replay-btn').onclick = () => startRound(true);
+$('back-lobby-btn').onclick = () => {
+  showConfirm('Về phòng chờ để đổi cấu hình? Điểm số hiện tại vẫn được giữ.', async () => {
+    await update(ref(db,'rooms/'+roomCode), { status:'lobby' });
+  });
+};
+
+})();
+</script>
+</body>
+</html>
