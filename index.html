@@ -127,7 +127,9 @@
   .reveal-panel .rp-close{ position:absolute; top:10px; right:10px; width:28px; height:28px; border-radius:50%; background:var(--charcoal); border:1px solid var(--line); color:var(--paper-dim); cursor:pointer; }
 
   .stamp-zone{ height:230px; border:2px dashed var(--amber-dim); border-radius:4px; position:relative; overflow:hidden;
-    background: repeating-linear-gradient(135deg, rgba(201,153,47,0.03) 0px, rgba(201,153,47,0.03) 10px, transparent 10px, transparent 20px); }
+    background: repeating-linear-gradient(135deg, rgba(201,153,47,0.03) 0px, rgba(201,153,47,0.03) 10px, transparent 10px, transparent 20px);
+    touch-action:none; cursor:grab; user-select:none; -webkit-user-select:none; }
+  .stamp-zone:active{ cursor:grabbing; }
   .envelope-flap{ position:absolute; top:0; left:0; right:0; height:80px; background:linear-gradient(180deg, rgba(201,153,47,0.12), transparent); clip-path:polygon(0 0,100% 0,50% 66%); opacity:0.5; }
   .card-pullout{ position:absolute; inset:0; z-index:2; transform:translateY(100%); }
   .dossier{ width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; background:var(--charcoal-2); border-top:1px solid var(--line); }
@@ -1966,19 +1968,24 @@ function hideAllAbilityBoxes(){
 }
 
 let dragState = null;
+const DRAG_SENSITIVITY = 1.7; // kéo ngắn hơn vẫn mở được hết cỡ
+const OPEN_THRESHOLD = 0.35;  // kéo qua ~35% quãng đường là đủ để coi là "muốn mở"
+
 function applyPull(p){ $('my-card-pullout').style.transform = 'translateY('+((1-p)*100)+'%)'; }
 function onDragStart(e){
   const zone = $('my-stamp-zone');
-  dragState = { startY:e.clientY, zoneH: zone.getBoundingClientRect().height, moved:false, progress: dragState&&dragState.open?1:0 };
+  dragState = { startY:e.clientY, zoneH: zone.getBoundingClientRect().height, moved:false, progress: dragState&&dragState.open?1:0, pointerId:e.pointerId };
   $('my-card-pullout').style.transition='none';
+  if(zone.setPointerCapture){ try{ zone.setPointerCapture(e.pointerId); }catch(err){} }
   document.addEventListener('pointermove', onDragMove);
   document.addEventListener('pointerup', onDragEnd);
+  document.addEventListener('pointercancel', onDragEnd);
 }
 function onDragMove(e){
   if(!dragState) return;
   const dy = dragState.startY - e.clientY;
   if(Math.abs(dy)>4) dragState.moved=true;
-  let p = (dragState.progress||0) + dy/dragState.zoneH;
+  let p = (dragState.progress||0) + (dy * DRAG_SENSITIVITY) / dragState.zoneH;
   p = Math.max(0, Math.min(1,p));
   dragState.last = p;
   applyPull(p);
@@ -1987,7 +1994,8 @@ function onDragEnd(){
   if(!dragState) return;
   document.removeEventListener('pointermove', onDragMove);
   document.removeEventListener('pointerup', onDragEnd);
-  const open = dragState.moved ? (dragState.last>0.5) : !(dragState.progress>=0.5);
+  document.removeEventListener('pointercancel', onDragEnd);
+  const open = dragState.moved ? (dragState.last>OPEN_THRESHOLD) : !(dragState.progress>=0.5);
   $('my-card-pullout').style.transition='transform .3s cubic-bezier(.16,1,.3,1)';
   applyPull(open?1:0);
   $('my-pull-hint').classList.toggle('hidden', open);
