@@ -1810,6 +1810,8 @@ function renderLobby(){
   $('lobby-host-controls').style.display = isHost ? 'block' : 'none';
   $('lobby-guest-note').style.display = isHost ? 'none' : 'block';
 
+  if(isHost) clampConfigIfNeeded();
+
   if(isHost){
     if(!themeSelectBuilt){
       const sel = $('lobby-theme-select');
@@ -1849,22 +1851,76 @@ function renderLobby(){
   }
 }
 
-function cfgStepper(id, field, min, max){
-  $('lb-minus-'+id).onclick = () => {
-    const v = Math.max(min, room.config[field]-1);
-    update(ref(db,'rooms/'+roomCode+'/config'), { [field]: v });
-  };
-  $('lb-plus-'+id).onclick = () => {
-    const v = Math.min(max, room.config[field]+1);
-    update(ref(db,'rooms/'+roomCode+'/config'), { [field]: v });
-  };
+const OTHER_ROLE_FIELDS = ['numWhite','numSaboteur','numDetective','numHunter','numFool'];
+
+function specialOthersSum(cfg){
+  return OTHER_ROLE_FIELDS.reduce((s,f)=>s+cfg[f],0);
 }
-cfgStepper('spies','numSpies',0,99);
-cfgStepper('whites','numWhite',0,99);
-cfgStepper('sab','numSaboteur',0,99);
-cfgStepper('det','numDetective',0,99);
-cfgStepper('hun','numHunter',0,99);
-cfgStepper('fool','numFool',0,99);
+function maxVillainsFor(){
+  return Math.max(0, numPlayers()-1); // luôn còn ít nhất 1 dân thường
+}
+function maxSpiesFor(cfg){
+  const others = specialOthersSum(cfg);
+  return Math.max(0, Math.floor((numPlayers() - others - 1) / 2)); // dân thường > kẻ mạo danh
+}
+
+function incSpies(){
+  const cfg = room.config;
+  const max = maxSpiesFor(cfg);
+  const v = Math.min(max, cfg.numSpies+1);
+  if(v <= cfg.numSpies) return;
+  update(ref(db,'rooms/'+roomCode+'/config'), { numSpies: v });
+}
+function incOtherRole(field){
+  const cfg = room.config;
+  const maxV = maxVillainsFor();
+  const totalUsed = cfg.numSpies + specialOthersSum(cfg);
+  if(totalUsed >= maxV) return; // hết chỗ, không tăng được nữa
+  const patch = { [field]: cfg[field]+1 };
+  const newCfg = Object.assign({}, cfg, patch);
+  const maxSpiesNew = maxSpiesFor(newCfg);
+  if(newCfg.numSpies > maxSpiesNew) patch.numSpies = maxSpiesNew; // tự giảm Kẻ Mạo Danh nếu cần
+  update(ref(db,'rooms/'+roomCode+'/config'), patch);
+}
+function decRole(field){
+  const v = Math.max(0, room.config[field]-1);
+  update(ref(db,'rooms/'+roomCode+'/config'), { [field]: v });
+}
+
+$('lb-minus-spies').onclick = () => decRole('numSpies');
+$('lb-plus-spies').onclick = () => incSpies();
+$('lb-minus-whites').onclick = () => decRole('numWhite');
+$('lb-plus-whites').onclick = () => incOtherRole('numWhite');
+$('lb-minus-sab').onclick = () => decRole('numSaboteur');
+$('lb-plus-sab').onclick = () => incOtherRole('numSaboteur');
+$('lb-minus-det').onclick = () => decRole('numDetective');
+$('lb-plus-det').onclick = () => incOtherRole('numDetective');
+$('lb-minus-hun').onclick = () => decRole('numHunter');
+$('lb-plus-hun').onclick = () => incOtherRole('numHunter');
+$('lb-minus-fool').onclick = () => decRole('numFool');
+$('lb-plus-fool').onclick = () => incOtherRole('numFool');
+
+function clampConfigIfNeeded(){
+  if(!isHost || !room.config) return;
+  const cfg = Object.assign({}, room.config);
+  const maxV = maxVillainsFor();
+  const order = ['numFool','numHunter','numDetective','numSaboteur','numWhite','numSpies'];
+  let total = cfg.numSpies + specialOthersSum(cfg);
+  let changed = false;
+  while(total > maxV && total > 0){
+    let reduced = false;
+    for(const f of order){
+      if(cfg[f] > 0){ cfg[f]--; total--; changed = true; reduced = true; break; }
+    }
+    if(!reduced) break;
+  }
+  const maxSpiesNew = maxSpiesFor(cfg);
+  if(cfg.numSpies > maxSpiesNew){ cfg.numSpies = maxSpiesNew; changed = true; }
+  if(changed){
+    update(ref(db,'rooms/'+roomCode+'/config'), cfg);
+  }
+}
+
 $('lb-minus-time').onclick = () => update(ref(db,'rooms/'+roomCode+'/config'), { minutes: Math.max(1, room.config.minutes-1) });
 $('lb-plus-time').onclick = () => update(ref(db,'rooms/'+roomCode+'/config'), { minutes: Math.min(20, room.config.minutes+1) });
 $('lb-whitehint-toggle').onclick = () => update(ref(db,'rooms/'+roomCode+'/config'), { whiteHint: !room.config.whiteHint });
