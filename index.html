@@ -168,6 +168,11 @@
   .starter-box .sn{ font-family:'Oswald',sans-serif; font-size:20px; color:var(--amber); }
 
   .vote-progress{ font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:0.08em; color:var(--amber); text-transform:uppercase; margin-bottom:10px; }
+  .tally-recap{ border:1px solid var(--line); border-radius:4px; padding:12px 14px; background:var(--charcoal); }
+  .tally-recap.tie{ border-color:var(--amber); background:rgba(201,153,47,0.08); }
+  .tally-recap .tr-title{ font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color:var(--amber); margin-bottom:8px; }
+  .tally-recap .tr-row{ display:flex; justify-content:space-between; font-size:13px; color:var(--paper-dim); padding:3px 0; }
+  .tally-recap .tr-row.winner{ color:var(--paper); font-weight:600; }
   .vote-card{ border:1px solid var(--line); border-radius:3px; background:var(--charcoal); margin-bottom:8px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; font-size:14px; }
   .vote-card.locked{ opacity:0.4; pointer-events:none; }
   .vote-card.open{ cursor:default; }
@@ -337,6 +342,8 @@
 
       <div id="reveal-host-controls" style="display:none;">
         <button class="btn" id="start-timer-btn" style="margin-top:8px;">Bắt Đầu Đếm Giờ →</button>
+        <button class="btn secondary small" id="reroll-keyword-online-btn" style="margin-top:10px;">🔄 Đổi Từ Khóa</button>
+        <button class="btn secondary small" id="back-lobby-reveal-btn" style="margin-top:8px;">🏠 Quay Về Trang Chủ</button>
       </div>
       <div id="reveal-guest-note" class="hint">Đang chờ chủ phòng bắt đầu đếm giờ...</div>
     </div>
@@ -398,10 +405,23 @@
   <div class="screen" id="screen-vote">
     <div class="card">
       <span class="field-label">Giai Đoạn Bỏ Phiếu</span>
-      <div class="vote-progress" id="vote-progress">Đã lật 0/0 hồ sơ</div>
-      <div class="hint tight">Chạm vào tên một người để cả phòng cùng lật hồ sơ của họ.</div>
       <div id="vote-end-banner" style="display:none;"></div>
-      <div id="vote-list" style="margin-top:12px;"></div>
+
+      <div id="vote-casting-section" style="display:none;">
+        <div class="vote-progress" id="vote-progress">Đã bình chọn 0/0</div>
+        <div class="hint tight">Chạm vào tên người bạn nghi ngờ. Ai bị nhiều phiếu nhất sẽ bị loại; hòa phiếu sẽ bầu lại.</div>
+        <div class="target-list" id="vote-cast-list" style="margin-top:10px;"></div>
+        <div id="vote-not-eligible" class="hint" style="display:none;">Bạn đã bị loại, không thể bình chọn nữa — chờ kết quả thôi.</div>
+        <div id="vote-force-tally-row" style="display:none; margin-top:10px;">
+          <button class="btn secondary small" id="force-tally-btn">⏭ Chốt Phiếu Ngay (Chủ Phòng)</button>
+        </div>
+      </div>
+
+      <div id="vote-tally-recap" style="display:none; margin-top:12px;"></div>
+
+      <span class="field-label" style="margin-top:16px; display:block;">Đã Lộ Diện</span>
+      <div id="vote-list" style="margin-top:8px;"></div>
+
       <div id="vote-host-controls" style="display:none; margin-top:10px;">
         <button class="btn" id="finish-vote-btn">Xem Tổng Kết Đầy Đủ</button>
       </div>
@@ -1773,6 +1793,7 @@ function numPlayers(){ return playerIds().length; }
 
 /* ---------- LOBBY ---------- */
 let themeSelectBuilt = false;
+let lobbyIsValid = false;
 function renderLobby(){
   $('lobby-room-code').textContent = roomCode;
   const ids = playerIds();
@@ -1810,15 +1831,21 @@ function renderLobby(){
     const n = ids.length;
     const others = room.config.numWhite+room.config.numSaboteur+room.config.numDetective+room.config.numHunter+room.config.numFool;
     const villagers = n - room.config.numSpies - others;
+    let valid = true;
     if(n < 3){
-      $('lobby-validation').textContent = 'Cần ít nhất 3 người chơi tham gia trước khi bắt đầu.';
+      $('lobby-validation').textContent = 'Cần ít nhất 3 người chơi tham gia trước khi bắt đầu (hiện có '+n+').';
+      valid = false;
     } else if(villagers <= room.config.numSpies){
       $('lobby-validation').textContent = 'Số Dân Thường phải nhiều hơn số Kẻ Mạo Danh ít nhất 1 người — hãy điều chỉnh lại.';
+      valid = false;
     } else if(room.config.numSpies + room.config.numWhite + room.config.numSaboteur < 1){
       $('lobby-validation').textContent = 'Cần ít nhất 1 Kẻ Mạo Danh, Mr. White, hoặc Kẻ Phá Game.';
+      valid = false;
     } else {
       $('lobby-validation').textContent = '';
     }
+    lobbyIsValid = valid;
+    $('lobby-start-btn').disabled = !valid;
   }
 }
 
@@ -1842,7 +1869,10 @@ $('lb-minus-time').onclick = () => update(ref(db,'rooms/'+roomCode+'/config'), {
 $('lb-plus-time').onclick = () => update(ref(db,'rooms/'+roomCode+'/config'), { minutes: Math.min(20, room.config.minutes+1) });
 $('lb-whitehint-toggle').onclick = () => update(ref(db,'rooms/'+roomCode+'/config'), { whiteHint: !room.config.whiteHint });
 
-$('lobby-start-btn').onclick = () => startRound(false);
+$('lobby-start-btn').onclick = () => {
+  if(!lobbyIsValid) return;
+  startRound(false);
+};
 
 /* ---------- Bắt đầu / random ván ---------- */
 async function startRound(keepScores){
@@ -1879,6 +1909,7 @@ async function startRound(keepScores){
     peeked: {}, voteRevealed: {}, hunterTraps: {},
     voteEnded: false, voteOutcome: null,
     pendingReveal: null, mrwhiteGuessPending: null,
+    votingOpen: false, votes: {}, lastTally: null, tallyLock: null,
     starterId: null, timerEndsAt: null, timerDurationSec: cfg.minutes*60
   };
 
@@ -1917,6 +1948,37 @@ $('start-timer-btn').onclick = async () => {
     starterId, timerEndsAt: Date.now() + room.round.timerDurationSec*1000
   });
   await update(ref(db,'rooms/'+roomCode), { status:'timer' });
+};
+
+$('reroll-keyword-online-btn').onclick = () => {
+  showConfirm('Đổi sang từ khóa mới? Mọi người sẽ cần xem lại hồ sơ từ đầu, vai trò giữ nguyên như cũ.', rerollKeywordOnline);
+};
+
+async function rerollKeywordOnline(){
+  const cfg = room.config;
+  const pool = cfg.theme==='all' ? WORD_PAIRS : WORD_PAIRS.filter(p=>p.cat===cfg.theme);
+  const pair = pool[Math.floor(Math.random()*pool.length)];
+
+  const assignments = Object.assign({}, room.round.assignments);
+  Object.keys(assignments).forEach(pid => {
+    const a = Object.assign({}, assignments[pid]);
+    if(a.role === 'villager' || a.role === 'hunter'){ a.word = pair.main; }
+    else if(a.role === 'spy'){ a.word = pair.decoy; }
+    else if(a.role === 'saboteur'){ a.word = Math.random()<0.5 ? pair.main : pair.decoy; }
+    // mrwhite/detective/foolvillager: không có từ khóa, không cần đổi
+    assignments[pid] = a;
+  });
+
+  await update(ref(db,'rooms/'+roomCode+'/round'), {
+    location: pair.main, decoyWord: pair.decoy, hintText: pair.hint,
+    assignments, peeked: {}, hunterTraps: {}
+  });
+}
+
+$('back-lobby-reveal-btn').onclick = () => {
+  showConfirm('Quay về trang chủ? Ván chơi hiện tại sẽ bị hủy (tên và cấu hình vẫn được giữ nguyên).', async () => {
+    await update(ref(db,'rooms/'+roomCode), { status:'lobby' });
+  });
 };
 
 /* ---------- Modal xem hồ sơ riêng (kéo phong bì) ---------- */
@@ -1984,7 +2046,7 @@ function onDragStart(e){
 function onDragMove(e){
   if(!dragState) return;
   const dy = dragState.startY - e.clientY;
-  if(Math.abs(dy)>4) dragState.moved=true;
+  if(Math.abs(dy)>8) dragState.moved=true;
   let p = (dragState.progress||0) + (dy * DRAG_SENSITIVITY) / dragState.zoneH;
   p = Math.max(0, Math.min(1,p));
   dragState.last = p;
@@ -1995,7 +2057,8 @@ function onDragEnd(){
   document.removeEventListener('pointermove', onDragMove);
   document.removeEventListener('pointerup', onDragEnd);
   document.removeEventListener('pointercancel', onDragEnd);
-  const open = dragState.moved ? (dragState.last>OPEN_THRESHOLD) : !(dragState.progress>=0.5);
+  // Chỉ đổi trạng thái khi thực sự có thao tác KÉO; chạm suông (không di chuyển) giữ nguyên trạng thái cũ
+  const open = dragState.moved ? (dragState.last>OPEN_THRESHOLD) : (dragState.progress>=0.5);
   $('my-card-pullout').style.transition='transform .3s cubic-bezier(.16,1,.3,1)';
   applyPull(open?1:0);
   $('my-pull-hint').classList.toggle('hidden', open);
@@ -2105,14 +2168,19 @@ function tickTimer(){
   face.textContent = m+':'+s;
   face.classList.toggle('warn', remain<=30);
 }
-$('end-timer-btn').onclick = () => update(ref(db,'rooms/'+roomCode), { status:'voting' });
+$('end-timer-btn').onclick = () => update(ref(db,'rooms/'+roomCode), {
+  status:'voting',
+  'round/votingOpen': true,
+  'round/votes': {},
+  'round/lastTally': null
+});
 
 /* ---------- VOTE ---------- */
 function renderVoteScreen(){
   const r = room.round;
   const ids = playerIds();
-  const revealedCount = r.voteRevealed ? Object.keys(r.voteRevealed).length : 0;
-  $('vote-progress').textContent = 'Đã lật '+revealedCount+'/'+ids.length+' hồ sơ';
+  const revealed = r.voteRevealed || {};
+  const revealedCount = Object.keys(revealed).length;
 
   const banner = $('vote-end-banner');
   if(r.voteEnded){
@@ -2126,22 +2194,69 @@ function renderVoteScreen(){
     banner.className = cls; banner.innerHTML = html;
   } else banner.style.display='none';
 
+  // Khu vực bình chọn (chỉ hiện khi đang mở phiếu và ván chưa kết thúc)
+  const castingSection = $('vote-casting-section');
+  if(r.votingOpen && !r.voteEnded){
+    castingSection.style.display = 'block';
+    const eligibleVoters = ids.filter(pid => !revealed[pid]);
+    const eligibleTargets = ids.filter(pid => !revealed[pid] && pid !== myId);
+    const votes = r.votes || {};
+    const votedCount = eligibleVoters.filter(pid => votes[pid]).length;
+    $('vote-progress').textContent = 'Đã bình chọn '+votedCount+'/'+eligibleVoters.length;
+
+    const iAmEligible = eligibleVoters.includes(myId);
+    $('vote-not-eligible').style.display = iAmEligible ? 'none' : 'block';
+
+    const listEl = $('vote-cast-list');
+    listEl.innerHTML = '';
+    if(iAmEligible){
+      eligibleTargets.forEach(pid => {
+        const checked = votes[myId] === pid;
+        const it = document.createElement('label');
+        it.className = 'target-item' + (checked ? ' checked' : '');
+        it.innerHTML = '<input type="radio" name="votechoice" data-pid="'+pid+'"'+(checked?' checked':'')+'> '+playerName(pid);
+        listEl.appendChild(it);
+      });
+      listEl.querySelectorAll('input').forEach(rb => rb.addEventListener('change', e => castVote(e.target.dataset.pid)));
+    } else {
+      listEl.innerHTML='';
+    }
+
+    $('vote-force-tally-row').style.display = isHost ? 'block' : 'none';
+  } else {
+    castingSection.style.display = 'none';
+  }
+
+  // Tổng kết lượt bình chọn gần nhất
+  const recap = $('vote-tally-recap');
+  if(r.lastTally && r.lastTally.counts && Object.keys(r.lastTally.counts).length){
+    recap.style.display = 'block';
+    recap.className = 'tally-recap' + (r.lastTally.tie ? ' tie' : '');
+    const rows = Object.entries(r.lastTally.counts)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([pid,n]) => '<div class="tr-row'+(!r.lastTally.tie && pid===r.lastTally.winnerId?' winner':'')+'">'+playerName(pid)+'<span>'+n+' phiếu</span></div>').join('');
+    recap.innerHTML = '<div class="tr-title">'+(r.lastTally.tie ? '⚖️ Hòa Phiếu — Đang Bầu Lại' : '🗳️ Kết Quả Bình Chọn')+'</div>' + rows;
+  } else {
+    recap.style.display = 'none';
+  }
+
+  // Danh sách đã lộ diện (chỉ để tham khảo, không bấm được)
   const list = $('vote-list');
   list.innerHTML='';
   ids.forEach(pid=>{
-    const isOpen = r.voteRevealed && r.voteRevealed[pid];
+    const isOpen = revealed[pid];
+    if(!isOpen) return;
     const a = r.assignments[pid];
-    const locked = r.voteEnded && !isOpen;
     const card = document.createElement('div');
-    card.className = 'vote-card'
-      + (isOpen ? ' open '+('is-'+a.role) : '')
-      + (locked ? ' locked' : '');
-    card.innerHTML = '<span>'+playerName(pid)+'</span><span class="status">'+(isOpen?'Đã lật':(locked?'Đã khóa':'Chạm để lật'))+'</span>';
-    if(!isOpen && !locked && !r.pendingReveal) card.onclick = () => tryReveal(pid);
+    card.className = 'vote-card open is-'+a.role;
+    card.innerHTML = '<span>'+playerName(pid)+'</span><span class="status">Đã lộ diện</span>';
     list.appendChild(card);
   });
+  if(revealedCount === 0){
+    list.innerHTML = '<div class="hint tight">Chưa ai bị loại.</div>';
+  }
 
-  $('vote-host-controls').style.display = isHost ? 'block' : 'none';
+  $('vote-host-controls').style.display = (isHost && r.voteEnded) ? 'block' : 'none';
 
   // đồng bộ hiệu ứng xoay/lật cho MỌI người khi có pendingReveal
   if(r.pendingReveal && r.pendingReveal.target){
@@ -2160,20 +2275,74 @@ function renderVoteScreen(){
   } else {
     $('mrwhite-guess-overlay').classList.remove('active');
   }
+
+  // Tự động kiểm phiếu khi đủ số người đã bình chọn
+  maybeTriggerTally();
 }
 $('finish-vote-btn').onclick = () => update(ref(db,'rooms/'+roomCode), { status:'ended' });
 
-async function tryReveal(targetId){
-  const lockRef = ref(db,'rooms/'+roomCode+'/round/pendingReveal');
+function castVote(targetId){
+  update(ref(db,'rooms/'+roomCode+'/round/votes'), { [myId]: targetId });
+}
+
+$('force-tally-btn').onclick = () => performTally();
+
+async function maybeTriggerTally(){
+  const r = room.round;
+  if(!r.votingOpen || r.voteEnded) return;
+  const eligibleVoters = playerIds().filter(pid => !(r.voteRevealed && r.voteRevealed[pid]));
+  const votes = r.votes || {};
+  const votedCount = eligibleVoters.filter(pid => votes[pid]).length;
+  if(eligibleVoters.length > 0 && votedCount >= eligibleVoters.length){
+    await performTally();
+  }
+}
+
+async function performTally(){
+  const lockRef = ref(db,'rooms/'+roomCode+'/round/tallyLock');
   const result = await runTransaction(lockRef, cur => {
-    if(cur) return; // đã có người khác đang lật
-    return { target: targetId, by: myId, startedAt: Date.now() };
+    if(cur) return; // đã có người khác đang kiểm phiếu
+    return { by: myId, ts: Date.now() };
   });
   if(!result.committed) return;
-  const snap = result.snapshot.val();
-  if(!snap || snap.by !== myId) return; // thua tranh chấp
-  // Người thắng transaction chịu trách nhiệm tính toán & ghi kết quả sau khi hiệu ứng chạy xong
-  setTimeout(() => finalizeReveal(targetId), 1150);
+  const lockSnap = result.snapshot.val();
+  if(!lockSnap || lockSnap.by !== myId) return; // thua tranh chấp
+
+  const roundSnap = await get(ref(db,'rooms/'+roomCode+'/round'));
+  const r = roundSnap.val();
+  const eligibleVoters = playerIds().filter(pid => !(r.voteRevealed && r.voteRevealed[pid]));
+  const votes = r.votes || {};
+  const counts = {};
+  eligibleVoters.forEach(pid => {
+    const t = votes[pid];
+    if(t) counts[t] = (counts[t]||0) + 1;
+  });
+  const entries = Object.entries(counts);
+
+  if(entries.length === 0){
+    // chốt sớm mà chưa ai bình chọn -> chỉ mở lại phiếu, chưa cần làm gì thêm
+    await update(ref(db,'rooms/'+roomCode+'/round'), { tallyLock:null });
+    return;
+  }
+
+  const maxCount = Math.max(...entries.map(e=>e[1]));
+  const topCandidates = entries.filter(e=>e[1]===maxCount).map(e=>e[0]);
+
+  if(topCandidates.length > 1){
+    // Hòa phiếu -> xóa phiếu cũ, mở lại vòng bầu chọn mới
+    await update(ref(db,'rooms/'+roomCode+'/round'), {
+      tallyLock:null, votes:{}, lastTally: { counts, tie:true, ts: Date.now() }
+    });
+    return;
+  }
+
+  const target = topCandidates[0];
+  await update(ref(db,'rooms/'+roomCode+'/round'), {
+    tallyLock:null, votingOpen:false, votes:{},
+    lastTally: { counts, tie:false, winnerId: target, ts: Date.now() },
+    pendingReveal: { target, by: myId, startedAt: Date.now() }
+  });
+  setTimeout(() => finalizeReveal(target), 1150);
 }
 
 function playSpinAnimation(targetId, isMine){
@@ -2258,6 +2427,11 @@ async function finalizeReveal(targetId){
     else if(remain.spies === remain.nonSpies){ patch.voteEnded = true; patch.voteOutcome = 'spies'; }
   }
 
+  // Nếu ván chưa kết thúc, mở lại vòng bình chọn mới cho lượt loại tiếp theo
+  if(!patch.voteEnded){
+    patch.votingOpen = true;
+  }
+
   await update(ref(db,'rooms/'+roomCode+'/round'), patch);
 }
 
@@ -2302,6 +2476,9 @@ $('mrwhite-guess-btn').onclick = async () => {
       if(remain.spies===0){ patch.voteEnded=true; patch.voteOutcome='villagers'; }
       else if(remain.spies===remain.nonSpies){ patch.voteEnded=true; patch.voteOutcome='spies'; }
     }
+  }
+  if(!patch.voteEnded){
+    patch.votingOpen = true;
   }
   await update(ref(db,'rooms/'+roomCode+'/round'), patch);
   $('mrwhite-guess-overlay').classList.remove('active');
