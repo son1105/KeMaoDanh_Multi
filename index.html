@@ -409,12 +409,17 @@
 
       <div id="vote-casting-section" style="display:none;">
         <div class="vote-progress" id="vote-progress">Đã bình chọn 0/0</div>
-        <div class="hint tight">Chạm vào tên người bạn nghi ngờ. Ai bị nhiều phiếu nhất sẽ bị loại; hòa phiếu sẽ bầu lại.</div>
+        <div class="hint tight">Chạm vào tên người bạn nghi ngờ — có thể đổi ý bất cứ lúc nào trước khi chủ phòng chốt phiếu. Ai bị nhiều phiếu nhất sẽ bị loại; hòa phiếu sẽ bầu lại.</div>
         <div class="target-list" id="vote-cast-list" style="margin-top:10px;"></div>
         <div id="vote-not-eligible" class="hint" style="display:none;">Bạn đã bị loại, không thể bình chọn nữa — chờ kết quả thôi.</div>
+
+        <span class="field-label" style="margin-top:16px; display:block;">Phiếu Bầu Hiện Tại (Trực Tiếp)</span>
+        <div class="player-list" id="vote-live-list" style="margin-top:6px;"></div>
+
         <div id="vote-force-tally-row" style="display:none; margin-top:10px;">
-          <button class="btn secondary small" id="force-tally-btn">⏭ Chốt Phiếu Ngay (Chủ Phòng)</button>
+          <button class="btn" id="force-tally-btn">🔒 Chốt Phiếu Bầu</button>
         </div>
+        <div id="vote-waiting-host-note" class="hint" style="display:none;">Đang chờ chủ phòng chốt phiếu bầu...</div>
       </div>
 
       <div id="vote-tally-recap" style="display:none; margin-top:12px;"></div>
@@ -2278,7 +2283,19 @@ function renderVoteScreen(){
       listEl.innerHTML='';
     }
 
+    // Hiển thị công khai, trực tiếp ai đã bầu cho ai
+    const liveList = $('vote-live-list');
+    liveList.innerHTML = '';
+    eligibleVoters.forEach(pid => {
+      const targetId = votes[pid];
+      const row = document.createElement('div');
+      row.className = 'player-row';
+      row.innerHTML = '<span>'+playerName(pid)+(pid===myId?' (bạn)':'')+'</span><span class="tag">'+(targetId ? '→ '+playerName(targetId) : 'Chưa bầu')+'</span>';
+      liveList.appendChild(row);
+    });
+
     $('vote-force-tally-row').style.display = isHost ? 'block' : 'none';
+    $('vote-waiting-host-note').style.display = isHost ? 'none' : 'block';
   } else {
     castingSection.style.display = 'none';
   }
@@ -2331,9 +2348,6 @@ function renderVoteScreen(){
   } else {
     $('mrwhite-guess-overlay').classList.remove('active');
   }
-
-  // Tự động kiểm phiếu khi đủ số người đã bình chọn
-  maybeTriggerTally();
 }
 $('finish-vote-btn').onclick = () => update(ref(db,'rooms/'+roomCode), { status:'ended' });
 
@@ -2341,18 +2355,18 @@ function castVote(targetId){
   update(ref(db,'rooms/'+roomCode+'/round/votes'), { [myId]: targetId });
 }
 
-$('force-tally-btn').onclick = () => performTally();
-
-async function maybeTriggerTally(){
+$('force-tally-btn').onclick = () => {
+  if(!isHost) return;
   const r = room.round;
-  if(!r.votingOpen || r.voteEnded) return;
   const eligibleVoters = playerIds().filter(pid => !(r.voteRevealed && r.voteRevealed[pid]));
   const votes = r.votes || {};
   const votedCount = eligibleVoters.filter(pid => votes[pid]).length;
-  if(eligibleVoters.length > 0 && votedCount >= eligibleVoters.length){
-    await performTally();
+  if(votedCount === 0){
+    showConfirm('Chưa có ai bình chọn cả. Vẫn muốn chốt phiếu?', performTally);
+    return;
   }
-}
+  performTally();
+};
 
 async function performTally(){
   const lockRef = ref(db,'rooms/'+roomCode+'/round/tallyLock');
