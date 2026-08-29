@@ -91,6 +91,13 @@
 
   .player-list{ display:flex; flex-direction:column; gap:6px; margin:10px 0 16px; }
   .player-row{ display:flex; align-items:center; justify-content:space-between; padding:9px 12px; border:1px solid var(--line); border-radius:3px; background:var(--charcoal); font-size:13.5px; }
+  .player-row .who-wrap{ display:flex; align-items:center; gap:8px; }
+
+  .avatar-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .avatar-btn{ width:42px; height:42px; border-radius:50%; border:2px solid var(--line); background:var(--charcoal); font-size:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+  .avatar-btn.selected{ border-color:var(--amber); background:rgba(201,153,47,0.15); }
+  .player-avatar{ font-size:17px; line-height:1; }
+  .player-avatar-lg{ font-size:34px; line-height:1; display:block; margin-bottom:4px; }
   .player-row .tag{ font-size:10px; color:var(--amber); letter-spacing:0.1em; text-transform:uppercase; }
 
   .stepper-row{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
@@ -262,6 +269,9 @@
     <div class="card">
       <span class="field-label">Tên của bạn</span>
       <input class="text-input" id="my-name-input" placeholder="Nhập tên bạn muốn hiện...">
+
+      <span class="field-label" style="margin-top:16px; display:block;">Chọn Avatar</span>
+      <div class="avatar-grid" id="avatar-grid"></div>
 
       <div style="margin-top:18px;">
         <button class="btn" id="create-room-btn">➕ Tạo Phòng Mới</button>
@@ -516,6 +526,24 @@ function getMyId(){
   return id;
 }
 const myId = getMyId();
+
+/* ---------- Avatar ---------- */
+const AVATAR_OPTIONS = ['🦊','🐱','🐶','🦁','🐼','🐨','🐰','🦉','🐸','🐵','🦄','🐺','🐯','🐧','🦖','🐙','🐝','🦋','🐢','🦔'];
+let selectedAvatar = AVATAR_OPTIONS[Math.floor(Math.random()*AVATAR_OPTIONS.length)];
+
+function renderAvatarGrid(){
+  const wrap = $('avatar-grid');
+  wrap.innerHTML = '';
+  AVATAR_OPTIONS.forEach(em => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'avatar-btn' + (em===selectedAvatar ? ' selected' : '');
+    btn.textContent = em;
+    btn.onclick = () => { selectedAvatar = em; renderAvatarGrid(); };
+    wrap.appendChild(btn);
+  });
+}
+renderAvatarGrid();
 
 /* ---------- Dữ liệu từ khóa (rút gọn từ bản 1 máy) ---------- */
 const CATEGORIES = [
@@ -1744,7 +1772,7 @@ $('create-room-btn').onclick = async () => {
     hostId: myId,
     status: 'lobby',
     config: { theme:'all', numSpies:1, numWhite:0, numSaboteur:0, numDetective:0, numHunter:0, numFool:0, whiteHint:false, minutes:8 },
-    players: { [myId]: { name, joinedAt: Date.now() } }
+    players: { [myId]: { name, avatar: selectedAvatar, joinedAt: Date.now() } }
   };
   try{
     await set(ref(db, 'rooms/'+code), initial);
@@ -1763,7 +1791,7 @@ $('join-room-btn').onclick = async () => {
   try{
     const snap = await get(ref(db, 'rooms/'+code));
     if(!snap.exists()){ $('landing-status').textContent='Không tìm thấy phòng với mã này.'; return; }
-    await update(ref(db, 'rooms/'+code+'/players/'+myId), { name, joinedAt: Date.now() });
+    await update(ref(db, 'rooms/'+code+'/players/'+myId), { name, avatar: selectedAvatar, joinedAt: Date.now() });
     isHost = snap.val().hostId === myId;
     joinRoomStream(code);
   } catch(err){
@@ -1794,6 +1822,8 @@ function renderAll(){
 
 function playerIds(){ return room.players ? Object.keys(room.players) : []; }
 function playerName(pid){ return (room.players && room.players[pid] && room.players[pid].name) || '???'; }
+function playerAvatar(pid){ return (room.players && room.players[pid] && room.players[pid].avatar) || '🙂'; }
+function nameWithAvatar(pid){ return '<span class="who-wrap"><span class="player-avatar">'+playerAvatar(pid)+'</span>'+playerName(pid)+'</span>'; }
 function numPlayers(){ return playerIds().length; }
 
 /* ---------- LOBBY ---------- */
@@ -1808,7 +1838,7 @@ function renderLobby(){
   ids.forEach(pid => {
     const row = document.createElement('div');
     row.className = 'player-row';
-    row.innerHTML = '<span>'+playerName(pid)+(pid===myId?' (bạn)':'')+'</span>' + (pid===room.hostId ? '<span class="tag">Chủ phòng</span>' : '');
+    row.innerHTML = '<span class="who-wrap"><span class="player-avatar">'+playerAvatar(pid)+'</span>'+playerName(pid)+(pid===myId?' (bạn)':'')+'</span>' + (pid===room.hostId ? '<span class="tag">Chủ phòng</span>' : '');
     list.appendChild(row);
   });
 
@@ -1989,7 +2019,7 @@ function renderRevealScreen(){
     const peeked = room.round.peeked && room.round.peeked[pid];
     const row = document.createElement('div');
     row.className = 'player-row';
-    row.innerHTML = '<span>'+playerName(pid)+(pid===myId?' (bạn)':'')+'</span><span class="tag">'+(peeked?'Đã xem':'Chưa xem')+'</span>';
+    row.innerHTML = '<span class="who-wrap"><span class="player-avatar">'+playerAvatar(pid)+'</span>'+playerName(pid)+(pid===myId?' (bạn)':'')+'</span><span class="tag">'+(peeked?'Đã xem':'Chưa xem')+'</span>';
     list.appendChild(row);
   });
   $('reveal-host-controls').style.display = isHost ? 'block' : 'none';
@@ -2143,7 +2173,7 @@ function showAbilityForRole(a){
     others.forEach(pid=>{
       const checked = localAbilityState.detSel.includes(pid);
       const it=document.createElement('label'); it.className='target-item'+(checked?' checked':'');
-      it.innerHTML='<input type="checkbox" data-pid="'+pid+'"'+(checked?' checked':'')+'> '+playerName(pid);
+      it.innerHTML='<input type="checkbox" data-pid="'+pid+'"'+(checked?' checked':'')+'> <span class="player-avatar">'+playerAvatar(pid)+'</span> '+playerName(pid);
       listEl.appendChild(it);
     });
     listEl.querySelectorAll('input').forEach(cb=>cb.addEventListener('change', e=>{
@@ -2158,7 +2188,7 @@ function showAbilityForRole(a){
     others.forEach(pid=>{
       const checked = localAbilityState.hunSel===pid;
       const it=document.createElement('label'); it.className='target-item'+(checked?' checked':'');
-      it.innerHTML='<input type="radio" name="hunsel" data-pid="'+pid+'"'+(checked?' checked':'')+'> '+playerName(pid);
+      it.innerHTML='<input type="radio" name="hunsel" data-pid="'+pid+'"'+(checked?' checked':'')+'> <span class="player-avatar">'+playerAvatar(pid)+'</span> '+playerName(pid);
       listEl.appendChild(it);
     });
     listEl.querySelectorAll('input').forEach(rb=>rb.addEventListener('change', e=>{ localAbilityState.hunSel=e.target.dataset.pid; showAbilityForRole(a); }));
@@ -2168,7 +2198,7 @@ function showAbilityForRole(a){
     others.forEach(pid=>{
       const checked = localAbilityState.foolSel===pid;
       const it=document.createElement('label'); it.className='target-item'+(checked?' checked':'');
-      it.innerHTML='<input type="radio" name="foolsel" data-pid="'+pid+'"'+(checked?' checked':'')+'> '+playerName(pid);
+      it.innerHTML='<input type="radio" name="foolsel" data-pid="'+pid+'"'+(checked?' checked':'')+'> <span class="player-avatar">'+playerAvatar(pid)+'</span> '+playerName(pid);
       listEl.appendChild(it);
     });
     listEl.querySelectorAll('input').forEach(rb=>rb.addEventListener('change', e=>{ localAbilityState.foolSel=e.target.dataset.pid; showAbilityForRole(a); }));
@@ -2213,7 +2243,7 @@ $('ability-fool-btn').onclick = () => {
 /* ---------- TIMER ---------- */
 let timerInterval = null;
 function renderTimerScreen(){
-  $('starter-name').textContent = playerName(room.round.starterId);
+  $('starter-name').textContent = playerAvatar(room.round.starterId) + ' ' + playerName(room.round.starterId);
   $('timer-host-controls').style.display = isHost ? 'block' : 'none';
   $('timer-guest-note').style.display = isHost ? 'none' : 'block';
   if(timerInterval) clearInterval(timerInterval);
@@ -2275,7 +2305,7 @@ function renderVoteScreen(){
         const checked = votes[myId] === pid;
         const it = document.createElement('label');
         it.className = 'target-item' + (checked ? ' checked' : '');
-        it.innerHTML = '<input type="radio" name="votechoice" data-pid="'+pid+'"'+(checked?' checked':'')+'> '+playerName(pid);
+        it.innerHTML = '<input type="radio" name="votechoice" data-pid="'+pid+'"'+(checked?' checked':'')+'> <span class="player-avatar">'+playerAvatar(pid)+'</span> '+playerName(pid);
         listEl.appendChild(it);
       });
       listEl.querySelectorAll('input').forEach(rb => rb.addEventListener('change', e => castVote(e.target.dataset.pid)));
@@ -2290,7 +2320,7 @@ function renderVoteScreen(){
       const targetId = votes[pid];
       const row = document.createElement('div');
       row.className = 'player-row';
-      row.innerHTML = '<span>'+playerName(pid)+(pid===myId?' (bạn)':'')+'</span><span class="tag">'+(targetId ? '→ '+playerName(targetId) : 'Chưa bầu')+'</span>';
+      row.innerHTML = '<span class="who-wrap"><span class="player-avatar">'+playerAvatar(pid)+'</span>'+playerName(pid)+(pid===myId?' (bạn)':'')+'</span><span class="tag">'+(targetId ? '→ '+playerName(targetId) : 'Chưa bầu')+'</span>';
       liveList.appendChild(row);
     });
 
@@ -2307,7 +2337,7 @@ function renderVoteScreen(){
     recap.className = 'tally-recap' + (r.lastTally.tie ? ' tie' : '');
     const rows = Object.entries(r.lastTally.counts)
       .sort((a,b)=>b[1]-a[1])
-      .map(([pid,n]) => '<div class="tr-row'+(!r.lastTally.tie && pid===r.lastTally.winnerId?' winner':'')+'">'+playerName(pid)+'<span>'+n+' phiếu</span></div>').join('');
+      .map(([pid,n]) => '<div class="tr-row'+(!r.lastTally.tie && pid===r.lastTally.winnerId?' winner':'')+'"><span class="player-avatar">'+playerAvatar(pid)+'</span> '+playerName(pid)+'<span>'+n+' phiếu</span></div>').join('');
     recap.innerHTML = '<div class="tr-title">'+(r.lastTally.tie ? '⚖️ Hòa Phiếu — Đang Bầu Lại' : '🗳️ Kết Quả Bình Chọn')+'</div>' + rows;
   } else {
     recap.style.display = 'none';
@@ -2322,7 +2352,7 @@ function renderVoteScreen(){
     const a = r.assignments[pid];
     const card = document.createElement('div');
     card.className = 'vote-card open is-'+a.role;
-    card.innerHTML = '<span>'+playerName(pid)+'</span><span class="status">Đã lộ diện</span>';
+    card.innerHTML = '<span class="who-wrap"><span class="player-avatar">'+playerAvatar(pid)+'</span>'+playerName(pid)+'</span><span class="status">Đã lộ diện</span>';
     list.appendChild(card);
   });
   if(revealedCount === 0){
@@ -2419,7 +2449,7 @@ function playSpinAnimation(targetId, isMine){
   const a = room.round.assignments[targetId];
   const roleText = a.role==='spy'?SPY_TITLE:a.role==='mrwhite'?WHITE_TITLE:a.role==='saboteur'?SABOTEUR_TITLE:a.role==='detective'?DETECTIVE_TITLE:a.role==='hunter'?HUNTER_TITLE:a.role==='foolvillager'?FOOL_TITLE:'DÂN THƯỜNG';
   $('spin-icon').textContent = ROLE_ICON[a.role] || ROLE_ICON.villager;
-  $('spin-name').textContent = playerName(targetId);
+  $('spin-name').textContent = playerAvatar(targetId) + ' ' + playerName(targetId);
   $('spin-role').textContent = roleText;
   const back = $('spin-face-back');
   back.className = 'spin-face back is-'+a.role;
@@ -2565,7 +2595,7 @@ function renderSummary(){
     const label = a.role==='spy'?SPY_TITLE:a.role==='mrwhite'?WHITE_TITLE:a.role==='saboteur'?SABOTEUR_TITLE:a.role==='detective'?DETECTIVE_TITLE:a.role==='hunter'?HUNTER_TITLE:a.role==='foolvillager'?FOOL_TITLE:'Dân thường';
     const row = document.createElement('div');
     row.className='summary-row is-'+a.role;
-    row.innerHTML = '<span class="who">'+playerName(pid)+'</span><span class="what">'+label+' · '+(r.scores[pid]||0)+' điểm</span>';
+    row.innerHTML = '<span class="who"><span class="player-avatar">'+playerAvatar(pid)+'</span> '+playerName(pid)+'</span><span class="what">'+label+' · '+(r.scores[pid]||0)+' điểm</span>';
     list.appendChild(row);
   });
   $('summary-host-controls').style.display = isHost ? 'block' : 'none';
