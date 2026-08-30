@@ -181,24 +181,32 @@
   .tally-recap .tr-row{ display:flex; justify-content:space-between; font-size:13px; color:var(--paper-dim); padding:3px 0; }
   .tally-recap .tr-row.winner{ color:var(--paper); font-weight:600; }
 
+  #vote-player-cards{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:10px;
+  }
   .pv-card{
-    border:1px solid var(--line); border-radius:5px; background:var(--charcoal);
-    padding:12px 14px; margin-bottom:8px; cursor:pointer;
+    position:relative;
+    aspect-ratio: 1 / 1;
+    border:1px solid var(--line); border-radius:6px; background:var(--charcoal);
+    padding:10px 6px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:3px;
+    overflow:hidden;
     transition: border-color .15s ease, transform .1s ease;
   }
-  .pv-card:active{ transform:scale(0.98); }
+  .pv-card:active{ transform:scale(0.96); }
   .pv-card.me{ border-color:var(--ghost); cursor:default; }
   .pv-card.me:active{ transform:none; }
   .pv-card.my-choice{ border-color:var(--amber); background:rgba(201,153,47,0.08); }
   .pv-card.not-clickable{ cursor:default; }
   .pv-card.not-clickable:active{ transform:none; }
-  .pv-card .pv-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .pv-card .pv-name{ display:flex; align-items:center; gap:8px; font-family:'Oswald',sans-serif; font-size:15px; color:var(--paper); }
-  .pv-card .pv-avatar{ font-size:22px; }
-  .pv-card .pv-votes{ display:flex; align-items:center; gap:4px; font-family:'Oswald',sans-serif; font-size:13px; color:var(--amber); white-space:nowrap; }
-  .pv-card .pv-votes .hand{ font-size:17px; display:inline-block; animation: pointBounce 0.9s ease-in-out infinite; }
-  @keyframes pointBounce{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(-3px); } }
-  .pv-card .pv-sub{ margin-top:6px; font-size:11.5px; color:var(--paper-dim); }
+  .pv-card .pv-avatar{ font-size:28px; line-height:1; }
+  .pv-card .pv-name{ font-family:'Oswald',sans-serif; font-size:11.5px; color:var(--paper); line-height:1.2; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pv-card .pv-votes{ position:absolute; top:5px; right:5px; display:flex; align-items:center; gap:2px; font-family:'Oswald',sans-serif; font-size:10.5px; color:var(--amber); background:rgba(201,153,47,0.15); border-radius:10px; padding:2px 6px; }
+  .pv-card .pv-votes .hand{ font-size:12px; display:inline-block; animation: pointBounce 0.9s ease-in-out infinite; }
+  @keyframes pointBounce{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(-2px); } }
+  .pv-card .pv-sub{ font-size:9.5px; color:var(--paper-dim); max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .pv-card .pv-sub b{ color:var(--paper); }
   .pv-card.revealed{ opacity:0.85; }
   .pv-card.revealed.is-spy{ border-color:var(--red-bright); }
@@ -2345,17 +2353,17 @@ function renderVoteScreen(){
         + (!clickable ? ' not-clickable' : '');
 
       const votesHtml = receivedCount > 0
-        ? '<span class="pv-votes"><span class="hand">👉</span>'+receivedCount+' phiếu</span>'
+        ? '<span class="pv-votes"><span class="hand">👉</span>'+receivedCount+'</span>'
         : '';
-      const subHtml = theirTarget
-        ? '<div class="pv-sub">Đã bầu cho: <b>'+playerAvatar(theirTarget)+' '+playerName(theirTarget)+'</b></div>'
-        : '<div class="pv-sub">Chưa bầu</div>';
+      const subText = theirTarget
+        ? '→ '+playerAvatar(theirTarget)+' '+playerName(theirTarget)
+        : 'Chưa bầu';
 
       card.innerHTML =
-        '<div class="pv-top">' +
-          '<span class="pv-name"><span class="pv-avatar">'+playerAvatar(pid)+'</span>'+playerName(pid)+(isMe?' (bạn)':'')+'</span>' +
-          votesHtml +
-        '</div>' + subHtml;
+        votesHtml +
+        '<div class="pv-avatar">'+playerAvatar(pid)+'</div>' +
+        '<div class="pv-name">'+playerName(pid)+(isMe?' (bạn)':'')+'</div>' +
+        '<div class="pv-sub">'+subText+'</div>';
 
       if(clickable) card.onclick = () => castVote(pid);
       cardsWrap.appendChild(card);
