@@ -179,6 +179,17 @@
   .tally-recap.tie{ border-color:var(--amber); background:rgba(201,153,47,0.08); }
   .tally-recap .tr-title{ font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color:var(--amber); margin-bottom:8px; }
   .tally-recap .tr-row{ display:flex; justify-content:space-between; font-size:13px; color:var(--paper-dim); padding:3px 0; }
+  .tally-recap .tr-role{
+    display:inline-block; margin-left:8px; font-family:'Oswald',sans-serif; font-size:10.5px;
+    letter-spacing:0.04em; text-transform:uppercase; padding:2px 7px; border-radius:10px;
+    background:rgba(201,153,47,0.12); color:var(--amber);
+  }
+  .tally-recap .tr-role.is-spy{ background:rgba(197,39,31,0.15); color:var(--red-bright); }
+  .tally-recap .tr-role.is-mrwhite{ background:rgba(143,179,199,0.15); color:var(--ghost); }
+  .tally-recap .tr-role.is-saboteur{ background:rgba(180,142,224,0.15); color:var(--chaos); }
+  .tally-recap .tr-role.is-detective{ background:rgba(127,201,160,0.15); color:var(--detective); }
+  .tally-recap .tr-role.is-hunter{ background:rgba(217,130,79,0.15); color:var(--hunter); }
+  .tally-recap .tr-role.is-foolvillager{ background:rgba(217,127,176,0.15); color:var(--fool); }
   .tally-recap .tr-row.winner{ color:var(--paper); font-weight:600; }
 
   #vote-player-cards{
@@ -1785,6 +1796,9 @@ const CATEGORIES = [
 const SPY_TITLE="KẺ MẠO DANH", WHITE_TITLE="MR. WHITE", SABOTEUR_TITLE="KẺ PHÁ GAME",
       DETECTIVE_TITLE="THÁM TỬ", HUNTER_TITLE="THỢ SĂN", FOOL_TITLE="DÂN NGU";
 const ROLE_ICON = { spy:'🕵️', mrwhite:'👻', saboteur:'🃏', detective:'🔍', hunter:'🏹', foolvillager:'👀', villager:'🙂' };
+function roleLabelText(role){
+  return role==='spy'?SPY_TITLE:role==='mrwhite'?WHITE_TITLE:role==='saboteur'?SABOTEUR_TITLE:role==='detective'?DETECTIVE_TITLE:role==='hunter'?HUNTER_TITLE:role==='foolvillager'?FOOL_TITLE:'DÂN THƯỜNG';
+}
 
 function shuffle(arr){
   const a = arr.slice();
@@ -2405,7 +2419,18 @@ function renderVoteScreen(){
     recap.className = 'tally-recap' + (r.lastTally.tie ? ' tie' : '');
     const rows = Object.entries(r.lastTally.counts)
       .sort((a,b)=>b[1]-a[1])
-      .map(([pid,n]) => '<div class="tr-row'+(!r.lastTally.tie && pid===r.lastTally.winnerId?' winner':'')+'"><span class="player-avatar">'+playerAvatar(pid)+'</span> '+playerName(pid)+'<span>'+n+' phiếu</span></div>').join('');
+      .map(([pid,n]) => {
+        const isWinner = !r.lastTally.tie && pid===r.lastTally.winnerId;
+        let roleTag = '';
+        if(isWinner && r.assignments && r.assignments[pid]){
+          const role = r.assignments[pid].role;
+          roleTag = '<span class="tr-role is-'+role+'">'+ROLE_ICON[role]+' '+roleLabelText(role)+'</span>';
+        }
+        return '<div class="tr-row'+(isWinner?' winner':'')+'">' +
+          '<span><span class="player-avatar">'+playerAvatar(pid)+'</span> '+playerName(pid)+roleTag+'</span>' +
+          '<span>'+n+' phiếu</span>' +
+        '</div>';
+      }).join('');
     recap.innerHTML = '<div class="tr-title">'+(r.lastTally.tie ? '⚖️ Hòa Phiếu — Đang Bầu Lại' : '🗳️ Kết Quả Bình Chọn')+'</div>' + rows;
   } else {
     recap.style.display = 'none';
