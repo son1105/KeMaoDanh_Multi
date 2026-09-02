@@ -2445,7 +2445,7 @@ function renderVoteScreen(){
     const a = r.assignments[pid];
     const card = document.createElement('div');
     card.className = 'vote-card open is-'+a.role;
-    card.innerHTML = '<span class="who-wrap"><span class="player-avatar">'+playerAvatar(pid)+'</span>'+playerName(pid)+'</span><span class="status">Đã lộ diện</span>';
+    card.innerHTML = '<span class="who-wrap"><span class="player-avatar">'+playerAvatar(pid)+'</span>'+playerName(pid)+'</span><span class="status">'+ROLE_ICON[a.role]+' '+roleLabelText(a.role)+'</span>';
     list.appendChild(card);
   });
   if(revealedCount === 0){
