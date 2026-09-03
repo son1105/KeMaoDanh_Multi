@@ -394,6 +394,11 @@
           <div><div class="toggle-title">Gợi ý cho Mr. White</div><div class="toggle-caption" id="lb-whitehint-caption">Tắt — Mr. White không biết gì cả</div></div>
         </div>
 
+        <div class="toggle-row">
+          <button class="toggle-switch" id="lb-secretvote-toggle" aria-pressed="false"><span class="knob"></span></button>
+          <div><div class="toggle-title">Bỏ Phiếu Kín</div><div class="toggle-caption" id="lb-secretvote-caption">Tắt — mọi người thấy ai đang bị nhiều phiếu và ai bầu cho ai</div></div>
+        </div>
+
         <span class="field-label" style="margin-top:14px; display:block;">Thời gian hỏi cung (phút)</span>
         <div class="stepper"><button id="lb-minus-time">−</button><span class="value" id="lb-time-count">8</span><button id="lb-plus-time">+</button></div>
 
@@ -487,7 +492,7 @@
 
       <div id="vote-casting-section" style="display:none;">
         <div class="vote-progress" id="vote-progress">Đã bình chọn 0/0</div>
-        <div class="hint tight">Chạm vào thẻ người bạn nghi ngờ — có thể đổi ý bất cứ lúc nào trước khi chủ phòng chốt phiếu. Ai bị nhiều phiếu nhất sẽ bị loại; hòa phiếu sẽ bầu lại.</div>
+        <div class="hint tight" id="vote-casting-hint">Chạm vào thẻ người bạn nghi ngờ — có thể đổi ý bất cứ lúc nào trước khi chủ phòng chốt phiếu. Ai bị nhiều phiếu nhất sẽ bị loại; hòa phiếu sẽ bầu lại.</div>
         <div id="vote-not-eligible" class="hint" style="display:none;">Bạn đã bị loại, không thể bình chọn nữa — chờ kết quả thôi.</div>
 
         <div id="vote-player-cards" style="margin-top:12px;"></div>
@@ -1841,7 +1846,7 @@ $('create-room-btn').onclick = async () => {
     createdAt: Date.now(),
     hostId: myId,
     status: 'lobby',
-    config: { theme:'all', numSpies:1, numWhite:0, numSaboteur:0, numDetective:0, numHunter:0, numFool:0, whiteHint:false, minutes:8 },
+    config: { theme:'all', numSpies:1, numWhite:0, numSaboteur:0, numDetective:0, numHunter:0, numFool:0, whiteHint:false, secretVoting:false, minutes:8 },
     players: { [myId]: { name, avatar: selectedAvatar, joinedAt: Date.now() } }
   };
   try{
@@ -1934,6 +1939,10 @@ function renderLobby(){
     $('lb-time-count').textContent = room.config.minutes;
     $('lb-whitehint-toggle').setAttribute('aria-pressed', room.config.whiteHint ? 'true':'false');
     $('lb-whitehint-caption').textContent = room.config.whiteHint ? 'Bật — Mr. White nhận gợi ý mơ hồ' : 'Tắt — Mr. White không biết gì cả';
+    $('lb-secretvote-toggle').setAttribute('aria-pressed', room.config.secretVoting ? 'true':'false');
+    $('lb-secretvote-caption').textContent = room.config.secretVoting
+      ? 'Bật — chỉ biết ai ĐÃ bầu, không biết bầu cho ai hay ai đang dẫn đầu'
+      : 'Tắt — mọi người thấy ai đang bị nhiều phiếu và ai bầu cho ai';
 
     const n = ids.length;
     const others = room.config.numWhite+room.config.numSaboteur+room.config.numDetective+room.config.numHunter+room.config.numFool;
@@ -2029,6 +2038,7 @@ function clampConfigIfNeeded(){
 $('lb-minus-time').onclick = () => update(ref(db,'rooms/'+roomCode+'/config'), { minutes: Math.max(1, room.config.minutes-1) });
 $('lb-plus-time').onclick = () => update(ref(db,'rooms/'+roomCode+'/config'), { minutes: Math.min(20, room.config.minutes+1) });
 $('lb-whitehint-toggle').onclick = () => update(ref(db,'rooms/'+roomCode+'/config'), { whiteHint: !room.config.whiteHint });
+$('lb-secretvote-toggle').onclick = () => update(ref(db,'rooms/'+roomCode+'/config'), { secretVoting: !room.config.secretVoting });
 
 $('lobby-start-btn').onclick = () => {
   if(!lobbyIsValid) return;
@@ -2374,6 +2384,11 @@ function renderVoteScreen(){
       if(t) voteCounts[t] = (voteCounts[t]||0) + 1;
     });
 
+    const secretMode = !!room.config.secretVoting;
+    $('vote-casting-hint').textContent = secretMode
+      ? 'Chạm vào thẻ người bạn nghi ngờ — bỏ phiếu kín: không ai biết ai bầu cho ai hay ai đang dẫn đầu cho đến khi chủ phòng chốt phiếu.'
+      : 'Chạm vào thẻ người bạn nghi ngờ — có thể đổi ý bất cứ lúc nào trước khi chủ phòng chốt phiếu. Ai bị nhiều phiếu nhất sẽ bị loại; hòa phiếu sẽ bầu lại.';
+
     const cardsWrap = $('vote-player-cards');
     cardsWrap.innerHTML = '';
     eligibleVoters.forEach(pid => {
@@ -2389,12 +2404,12 @@ function renderVoteScreen(){
         + (isMyChoice && !isMe ? ' my-choice' : '')
         + (!clickable ? ' not-clickable' : '');
 
-      const votesHtml = receivedCount > 0
+      const votesHtml = (!secretMode && receivedCount > 0)
         ? '<span class="pv-votes">'+receivedCount+'</span>'
         : '';
-      const subText = theirTarget
-        ? '→ '+playerAvatar(theirTarget)+' '+playerName(theirTarget)
-        : 'Chưa bầu';
+      const subText = secretMode
+        ? (theirTarget ? 'Đã bầu' : 'Chưa bầu')
+        : (theirTarget ? '→ '+playerAvatar(theirTarget)+' '+playerName(theirTarget) : 'Chưa bầu');
 
       card.innerHTML =
         votesHtml +
