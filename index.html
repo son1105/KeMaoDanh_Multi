@@ -231,6 +231,19 @@
     50%{ transform:scale(1.14); box-shadow:0 0 0 3px var(--charcoal), 0 0 20px rgba(197,39,31,0.95); }
   }
   .pv-card .pv-sub{ font-size:9.5px; color:var(--paper-dim); max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pv-card .pv-sub.voted-yes{
+    color:var(--detective); font-weight:700; font-size:10px; letter-spacing:0.03em;
+  }
+  .pv-card .pv-sub.voted-no{
+    color:var(--paper-dim); opacity:0.6; animation: waitPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes waitPulse{ 0%,100%{ opacity:0.4; } 50%{ opacity:0.85; } }
+  .pv-card .pv-votes.voted-badge{
+    background: radial-gradient(circle at 35% 30%, var(--detective), #4f9e73 70%);
+    box-shadow: 0 0 0 3px var(--charcoal), 0 0 14px rgba(127,201,160,0.75);
+    font-size:15px;
+    animation: voteBadgePulse 1.4s ease-in-out infinite;
+  }
   .pv-card .pv-sub b{ color:var(--paper); }
   .pv-card.revealed{ opacity:0.85; }
   .pv-card.revealed.is-spy{ border-color:var(--red-bright); }
@@ -2404,18 +2417,18 @@ function renderVoteScreen(){
         + (isMyChoice && !isMe ? ' my-choice' : '')
         + (!clickable ? ' not-clickable' : '');
 
-      const votesHtml = (!secretMode && receivedCount > 0)
-        ? '<span class="pv-votes">'+receivedCount+'</span>'
-        : '';
+      const votesHtml = secretMode
+        ? (theirTarget ? '<span class="pv-votes voted-badge">✓</span>' : '')
+        : (receivedCount > 0 ? '<span class="pv-votes">'+receivedCount+'</span>' : '');
       const subText = secretMode
-        ? (theirTarget ? 'Đã bầu' : 'Chưa bầu')
-        : (theirTarget ? '→ '+playerAvatar(theirTarget)+' '+playerName(theirTarget) : 'Chưa bầu');
+        ? (theirTarget ? '<span class="pv-sub voted-yes">✅ Đã Bầu</span>' : '<span class="pv-sub voted-no">⏳ Chưa Bầu</span>')
+        : '<span class="pv-sub">'+(theirTarget ? '→ '+playerAvatar(theirTarget)+' '+playerName(theirTarget) : 'Chưa bầu')+'</span>';
 
       card.innerHTML =
         votesHtml +
         '<div class="pv-avatar">'+playerAvatar(pid)+'</div>' +
         '<div class="pv-name">'+playerName(pid)+(isMe?' (bạn)':'')+'</div>' +
-        '<div class="pv-sub">'+subText+'</div>';
+        subText;
 
       if(clickable) card.onclick = () => castVote(pid);
       cardsWrap.appendChild(card);
